@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.tab_content') }}{% endblock %}
+{% block content %}
+{% include "partials/admin_tabs.html" %}
+<p class="muted">{{ t('admin.content_intro') }}</p>
+<div class="grid grid--2">
+  {% for game in games %}
+  <a class="game-card" href="{{ url_for(game.slug ~ '.content') }}">
+    <div class="game-card__icon"><i class="fa-solid {{ game.icon }}"></i></div>
+    <h2>{{ t('games.' ~ game.slug ~ '.title') }}</h2>
+    <p>{{ t('games.' ~ game.slug ~ '.content_summary') }}</p>
+    <div class="game-card__foot"><span></span><span class="btn btn--sm btn--ghost">{{ t('admin.edit_content') }}<i class="fa-solid fa-arrow-right"></i></span></div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ code }}{% endblock %}
+{% block content %}
+<div class="empty-state">
+  <i class="fa-solid fa-circle-exclamation"></i>
+  <h1>{{ heading }}</h1>
+  <p>{{ body }}</p>
+  <a class="btn" href="{{ url_for('home.index') }}">{{ t('errors.back_home') }}</a>
+</div>
+{% endblock %}

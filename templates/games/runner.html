@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}{{ t('games.runner.title') }}{% endblock %}
+{% block main_class %}app-main--wide{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/games/runner.css') }}">
+{% endblock %}
+{% block content %}
+<script type="application/json" id="page-config">{{ page_config | tojson }}</script>
+
+{% with slug='runner', worker=none, turn_seconds=cfg.turn_seconds %}{% include "partials/game_bar.html" %}{% endwith %}
+
+<div class="grid grid--sidebar">
+  <div>
+    {% with slug='runner' %}{% include "partials/team_picker.html" %}{% endwith %}
+
+    <nav class="tabs" role="tablist" aria-label="{{ t('games.runner.title') }}">
+      <button type="button" class="tab tab--active" data-step-tab="train" role="tab">{{ t('runner.step_train') }}</button>
+      <button type="button" class="tab" data-step-tab="play" role="tab">{{ t('runner.step_play') }}</button>
+      <button type="button" class="tab" data-step-tab="compare" role="tab">{{ t('runner.step_compare') }}</button>
+    </nav>
+
+    <div class="runner-status hidden" id="runner-status" role="status"></div>
+
+    {# ------------------------------------------------------------- train #}
+    <section data-step="train">
+      <p class="muted">{{ t('runner.train_intro') }}</p>
+      <div class="grid grid--2 runner-commands">
+        {% for cmd, icon in [('left', 'fa-arrow-left'), ('right', 'fa-arrow-right'), ('jump', 'fa-arrow-up'), ('background', 'fa-volume-xmark')] %}
+        <div class="card runner-cmd" data-command="{{ cmd }}">
+          <div class="runner-cmd__head">
+            <span class="runner-cmd__icon"><i class="fa-solid {{ icon }}"></i></span>
+            <div class="runner-cmd__title">
+              <h3>{{ t('runner.cmd_' ~ cmd) }}</h3>
+              <span class="caption" data-count></span>
+            </div>
+          </div>
+          {% if cmd == 'background' %}
+          <p class="caption">{{ t('runner.background_hint', seconds=cfg.background_seconds) }}</p>
+          <div class="runner-progress"><div class="runner-progress__fill" data-progress></div></div>
+          <div class="row">
+            <button type="button" class="btn" data-record-bg><i class="fa-solid fa-microphone"></i>{{ t('runner.record_background', seconds=cfg.background_seconds) }}</button>
+            <button type="button" class="btn btn--ghost btn--sm" data-redo>{{ t('runner.redo') }}</button>
+          </div>
+          {% else %}
+          <label class="caption" for="sound-{{ cmd }}">{{ t('runner.sound_name') }}</label>
+          <input type="text" id="sound-{{ cmd }}" maxlength="40" placeholder="{{ t('runner.word_placeholder_' ~ cmd) }}" data-sound-name>
+          <div class="runner-progress"><div class="runner-progress__fill" data-progress></div></div>
+          <div class="row">
+            <button type="button" class="btn btn--lg runner-ptt" data-ptt><i class="fa-solid fa-microphone"></i><span>{{ t('runner.hold_to_talk') }}</span></button>
+            <button type="button" class="btn btn--ghost btn--sm" data-redo>{{ t('runner.redo') }}</button>
+          </div>
+          {% endif %}
+          <div class="runner-cmd__live hidden" data-live></div>
+          <div class="runner-examples" data-examples></div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="card runner-train">
+        <div class="row">
+          <button type="button" class="btn btn--lg btn--highlight" id="train-btn" disabled><i class="fa-solid fa-brain"></i>{{ t('runner.train') }}</button>
+          <span id="train-status" class="runner-train__status"></span>
+          <span class="spacer"></span>
+          <button type="button" class="btn btn--ghost" id="test-btn" disabled><i class="fa-solid fa-ear-listen"></i><span>{{ t('runner.test_on') }}</span></button>
+        </div>
+        <div class="runner-progress"><div class="runner-progress__fill" id="train-progress"></div></div>
+        <div class="runner-bars hidden" id="test-bars"></div>
+      </div>
+    </section>
+
+    {# -------------------------------------------------------------- play #}
+    <section data-step="play" class="hidden">
+      <p class="muted">{{ t('runner.play_intro') }}</p>
+      <div class="row" style="margin-bottom: var(--sp-3)">
+        <button type="button" class="btn btn--lg" data-run="trainer"><i class="fa-solid fa-user"></i>{{ t('runner.run_trainer') }}</button>
+        <button type="button" class="btn btn--lg btn--highlight" data-run="other"><i class="fa-solid fa-user-group"></i>{{ t('runner.run_other') }}</button>
+        <button type="button" class="btn btn--ghost" data-run="practice"><i class="fa-solid fa-keyboard"></i>{{ t('runner.run_practice') }}</button>
+      </div>
+      <div class="runner-play">
+        <div class="runner-stage">
+          <div class="runner-hud">
+            <span>{{ t('runner.hud_time') }} <strong id="hud-time">0</strong></span>
+            <span>{{ t('runner.hud_lives') }} <strong id="hud-lives">0</strong></span>
+            <span>{{ t('runner.hud_coins') }} <strong id="hud-coins">0</strong></span>
+            <span>{{ t('runner.hud_score') }} <strong id="hud-score">0</strong></span>
+          </div>
+          <canvas id="runner-canvas" width="600" height="760" aria-label="{{ t('games.runner.title') }}"></canvas>
+          <div class="runner-overlay hidden" id="runner-overlay"></div>
+        </div>
+        <aside class="runner-side">
+          <div class="card runner-legend">
+            <div class="label">{{ t('runner.legend_title') }}</div>
+            <div class="runner-legend__row">
+              <span class="runner-legend__stop" aria-hidden="true">STOP</span>
+              <span><strong>{{ t('runner.legend_stop') }}</strong>{{ t('runner.legend_stop_how', lives=cfg.lives) }}</span>
+            </div>
+            <div class="runner-legend__row">
+              <span class="runner-legend__coin" aria-hidden="true">+{{ cfg.points_per_coin }}</span>
+              <span><strong>{{ t('runner.legend_coin') }}</strong>{{ t('runner.legend_coin_how', points=cfg.points_per_coin) }}</span>
+            </div>
+            <div class="runner-legend__row">
+              <span class="runner-legend__icon" aria-hidden="true"><i class="fa-solid fa-stopwatch"></i></span>
+              <span><strong>{{ t('runner.legend_time') }}</strong>{{ t('runner.legend_time_how', points=cfg.points_per_second) }}</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="label">{{ t('runner.last_command') }}</div>
+            <div class="runner-last" id="last-command">{{ t('runner.nothing_yet') }}</div>
+            <div class="caption" id="last-confidence"></div>
+          </div>
+          <div class="card">
+            <div class="label">{{ t('runner.listening') }}</div>
+            <div class="runner-bars" id="play-bars" data-empty="{{ t('runner.bars_empty') }}"></div>
+          </div>
+          <p class="caption">{{ t('runner.keys_hint') }}</p>
+        </aside>
+      </div>
+    </section>
+
+    {# ----------------------------------------------------------- compare #}
+    <section data-step="compare" class="hidden">
+      <h2>{{ t('runner.compare_intro') }}</h2>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th></th><th class="num">{{ t('runner.col_coins') }}</th><th class="num">{{ t('runner.col_seconds') }}</th><th class="num">{{ t('runner.col_hits') }}</th><th class="num">{{ t('runner.col_points') }}</th></tr></thead>
+          <tbody id="compare-rows"></tbody>
+        </table>
+      </div>
+      <p class="runner-verdict" id="compare-verdict"></p>
+    </section>
+
+    <p class="footnote">{{ t('runner.footnote') }}</p>
+  </div>
+
+  <aside>
+    {% with slug='runner' %}{% include "partials/mini_board.html" %}{% endwith %}
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/tfjs-3.21.0/tf.min.js') }}" defer></script>
+<script src="{{ url_for('static', filename='vendor/speech-commands-0.5.4/speech-commands.min.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/gamekit.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/runner/trainer.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/runner/game.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/runner/main.js') }}" defer></script>
+{% endblock %}

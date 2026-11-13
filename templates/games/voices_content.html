@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ t('voices.content_title') }}{% endblock %}
+{% block content %}
+{% include "partials/admin_tabs.html" %}
+<div class="breadcrumb"><a href="{{ url_for('admin.content') }}">{{ t('admin.tab_content') }}</a> / {{ t('games.voices.title') }}</div>
+<div class="page-head">
+  <div>
+    <h2>{{ t('voices.content_title') }}</h2>
+    <p>{{ t('voices.content_intro', lang=game_language) }}</p>
+    <p class="caption">{{ t('voices.content_counts', it=counts['it'], en=counts['en']) }}</p>
+  </div>
+</div>
+
+<div class="grid grid--sidebar">
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>{{ t('voices.content_text') }}</th><th>{{ t('voices.content_language') }}</th><th>{{ t('admin.status') }}</th><th></th></tr></thead>
+      <tbody>
+      {% for phrase in phrases %}
+      <tr>
+        <td colspan="2">
+          <form method="post" action="{{ url_for('voices.content_edit', phrase_id=phrase.id) }}" class="input-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" name="text" value="{{ phrase.text }}" maxlength="300" required aria-label="{{ t('voices.content_text') }}">
+            <select name="language" style="width: auto; flex: 0 0 auto" aria-label="{{ t('voices.content_language') }}">
+              {% for code in languages %}<option value="{{ code }}" {{ 'selected' if phrase.language == code }}>{{ code | upper }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="btn btn--ghost btn--sm" style="flex: 0 0 auto">{{ t('common.save') }}</button>
+          </form>
+        </td>
+        <td>{% if phrase.active %}<span class="badge badge--success">{{ t('voices.content_active') }}</span>{% else %}<span class="badge">{{ t('voices.content_inactive') }}</span>{% endif %}</td>
+        <td class="text-right">
+          <form method="post" action="{{ url_for('voices.content_toggle', phrase_id=phrase.id) }}" class="inline-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn--sm {{ 'btn--danger-ghost' if phrase.active else 'btn--ghost' }}">{{ t('voices.content_deactivate') if phrase.active else t('voices.content_activate') }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <aside class="card">
+    <h3>{{ t('voices.content_add') }}</h3>
+    <form method="post" action="{{ url_for('voices.content_add') }}" class="form-grid">
+      {{ form.hidden_tag() }}
+      <div><label for="p-text">{{ t('voices.content_text') }}</label>{{ form.text(id="p-text", maxlength=300, rows=3, required=true) }}</div>
+      <div><label for="p-lang">{{ t('voices.content_language') }}</label>
+        <select id="p-lang" name="language">{% for code in languages %}<option value="{{ code }}" {{ 'selected' if code == game_language }}>{{ code | upper }}</option>{% endfor %}</select></div>
+      <button type="submit" class="btn btn--block"><i class="fa-solid fa-plus"></i>{{ t('voices.content_add') }}</button>
+    </form>
+  </aside>
+</div>
+{% endblock %}

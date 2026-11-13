@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ t('games.runner.title') }} · {{ t('admin.tab_content') }}{% endblock %}
+{% block content %}
+{% include "partials/admin_tabs.html" %}
+<h2><i class="fa-solid fa-person-running" style="color: var(--accent)"></i> {{ t('games.runner.title') }}</h2>
+<p class="muted">{{ t('runner.content_intro') }}</p>
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>{{ t('runner.setting') }}</th><th class="num">{{ t('runner.value') }}</th><th>{{ t('runner.meaning') }}</th></tr></thead>
+    <tbody>
+    {% for key, value in settings.items() %}
+    <tr>
+      <td><code>{{ key }}</code></td>
+      <td class="num"><strong>{{ value }}</strong></td>
+      <td>{{ t('runner.set_' ~ key) }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{{ t('games.voices.title') }}{% endblock %}
+{% block main_class %}app-main--wide{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/games/voices.css') }}">{% endblock %}
+{% block content %}
+{% with slug='voices', worker='voice_clone', turn_seconds=cfg.turn_seconds %}{% include "partials/game_bar.html" %}{% endwith %}
+
+<nav class="tabs" role="tablist">
+  <button type="button" class="tab tab--active" data-tab="setup" role="tab"><i class="fa-solid fa-microphone"></i> {{ t('voices.tab_setup') }}</button>
+  <button type="button" class="tab" data-tab="play" role="tab"><i class="fa-solid fa-user-secret"></i> {{ t('voices.tab_play') }}</button>
+</nav>
+
+<div class="grid grid--sidebar">
+  <div>
+    {# ------------------------------------------------------------ setup #}
+    <section data-panel="setup" class="stack">
+      <div class="flash flash--info" style="margin-top:0"><i class="fa-solid fa-shield-halved"></i><span>{{ t('voices.privacy') }}</span></div>
+
+      <div class="card card--plain">
+        <h3>{{ t('voices.reading_title') }}</h3>
+        <p class="vo-reading">{{ reading_text }}</p>
+        <p class="caption" style="margin:0">{{ t('voices.reading_hint', n=cfg.reference_seconds) }}</p>
+        <div class="row" style="margin-top: var(--sp-3)">
+          <div class="level-meter"><div class="level-meter__fill" id="level"></div></div>
+        </div>
+      </div>
+
+      <div class="grid grid--2" id="team-cards"></div>
+
+      <div class="card">
+        <h3>{{ t('voices.generate_title') }}</h3>
+        <p class="muted">{{ t('voices.generate_body', n=cfg.clips_per_volunteer) }}</p>
+        <div class="row">
+          <button type="button" class="btn btn--lg" id="generate"><i class="fa-solid fa-wand-magic-sparkles"></i>{{ t('voices.generate') }}</button>
+          <button type="button" class="btn btn--ghost hidden" id="retry"><i class="fa-solid fa-rotate"></i>{{ t('voices.retry') }}</button>
+          <span class="spacer"></span>
+          <span id="progress" class="small"></span>
+        </div>
+      </div>
+
+      <div class="row row--end">
+        <button type="button" class="btn btn--danger-ghost btn--sm" id="delete-recordings"><i class="fa-solid fa-trash"></i>{{ t('voices.delete_recordings') }}</button>
+      </div>
+    </section>
+
+    {# ------------------------------------------------------------- play #}
+    <section data-panel="play" class="hidden stack">
+      <div class="vo-tracker" id="tracker" aria-label="{{ t('voices.js_round') }}"></div>
+      <div class="stage" id="stage"></div>
+      <div class="card" id="guesses"></div>
+      <div class="row row--between">
+        <button type="button" class="btn btn--ghost" id="prev"><i class="fa-solid fa-arrow-left"></i>{{ t('voices.js_prev') }}</button>
+        <button type="button" class="btn btn--highlight btn--lg" id="reveal"><i class="fa-solid fa-eye"></i>{{ t('voices.js_reveal') }}</button>
+        <button type="button" class="btn btn--ghost" id="next">{{ t('voices.js_next') }}<i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </section>
+  </div>
+
+  <aside class="stack">
+    {% with slug='voices' %}{% include "partials/mini_board.html" %}{% endwith %}
+    <div class="card card--plain">
+      <h3>{{ t('voices.how_title') }}</h3>
+      <p class="small muted">{{ t('voices.how_body') }}</p>
+      <p class="small" style="margin:0"><strong>{{ t('voices.rules', n=cfg.points_correct | pts) }}</strong>
+        {% if not cfg.own_team_can_score %}{{ t('voices.rules_own') }}{% endif %}</p>
+    </div>
+  </aside>
+</div>
+
+<p class="footnote">{{ t('voices.footnote') }}</p>
+
+<script type="application/json" id="page-config">{{ page_config | tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/gamekit.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/recorder.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/voices.js') }}" defer></script>
+{% endblock %}

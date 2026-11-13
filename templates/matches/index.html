@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}{{ t('nav.matches') }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ t('nav.matches') }}</h1>
+    <p>{{ t('matches.intro') }}</p>
+  </div>
+</div>
+
+<div class="grid grid--sidebar">
+  <div class="stack">
+    <section>
+      <h2>{{ t('matches.active') }}</h2>
+      {% if active %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>{{ t('matches.name') }}</th><th>{{ t('matches.school') }}</th><th>{{ t('matches.date') }}</th><th>{{ t('matches.teams') }}</th><th></th></tr></thead>
+          <tbody>
+          {% for m in active %}
+          <tr>
+            <td><a href="{{ url_for('matches.detail', match_id=m.id) }}"><strong>{{ m.name }}</strong></a>
+              {% if current_match and current_match.id == m.id %}<span class="badge badge--highlight">{{ t('matches.current') }}</span>{% endif %}</td>
+            <td>{{ m.school }}</td>
+            <td class="nowrap">{{ m.play_date.strftime('%d/%m/%Y') }}</td>
+            <td>{% for team in m.teams %}<span class="team-dot" style="background: {{ team.color }}" title="{{ team.name }}"></span> {% endfor %}</td>
+            <td class="text-right nowrap">
+              {% if not (current_match and current_match.id == m.id) %}
+              <form method="post" action="{{ url_for('matches.select', match_id=m.id) }}" class="inline-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn--sm">{{ t('matches.select') }}</button>
+              </form>
+              {% endif %}
+              <a class="btn btn--ghost btn--sm" href="{{ url_for('matches.detail', match_id=m.id) }}">{{ t('matches.manage') }}</a>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state"><i class="fa-solid fa-flag-checkered"></i>{{ t('matches.none_active') }}</div>
+      {% endif %}
+    </section>
+
+    <section>
+      <div class="row row--between" style="margin-bottom: var(--sp-3)">
+        <h2 style="margin:0">{{ t('matches.archive') }}</h2>
+        <form method="get" class="input-inline" style="max-width: 320px; width: 100%">
+          <input type="search" name="q" value="{{ query }}" placeholder="{{ t('matches.search_placeholder') }}" aria-label="{{ t('matches.search_placeholder') }}">
+          <button type="submit" class="btn btn--ghost btn--sm"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </form>
+      </div>
+      {% if archived %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>{{ t('matches.name') }}</th><th>{{ t('matches.school') }}</th><th>{{ t('matches.date') }}</th><th>{{ t('matches.teams') }}</th><th></th></tr></thead>
+          <tbody>
+          {% for m in archived %}
+          <tr>
+            <td>{{ m.name }}</td>
+            <td>{{ m.school }}</td>
+            <td class="nowrap">{{ m.play_date.strftime('%d/%m/%Y') }}</td>
+            <td>{{ m.teams | length }} {{ t('matches.teams_lower') }}</td>
+            <td class="text-right nowrap"><a class="btn btn--ghost btn--sm" href="{{ url_for('matches.results', match_id=m.id) }}">{{ t('matches.results') }}</a></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="muted">{{ t('matches.none_archived') }}</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <aside class="card" id="new">
+    <h2>{{ t('matches.new') }}</h2>
+    <form method="post" action="{{ url_for('matches.create') }}" class="form-grid">
+      {{ form.hidden_tag() }}
+      <div><label for="m-name">{{ t('matches.name') }}</label>{{ form.name(id="m-name", placeholder=t('matches.name_placeholder'), required=true) }}</div>
+      <div><label for="m-school">{{ t('matches.school') }}</label>{{ form.school(id="m-school", placeholder=t('matches.school_placeholder')) }}</div>
+      <div><label for="m-date">{{ t('matches.date') }}</label>{{ form.play_date(id="m-date") }}</div>
+      <div>
+        <label for="m-teams">{{ t('matches.teams') }}</label>
+        {{ form.teams(id="m-teams", rows=5) }}
+        <div class="field-hint">{{ t('matches.teams_hint', n=max_teams) }}</div>
+      </div>
+      <div><label for="m-notes">{{ t('matches.notes') }}</label>{{ form.notes(id="m-notes", rows=2) }}</div>
+      <button type="submit" class="btn btn--block"><i class="fa-solid fa-plus"></i>{{ t('matches.create') }}</button>
+    </form>
+  </aside>
+</div>
+{% endblock %}

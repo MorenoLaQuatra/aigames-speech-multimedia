@@ -1,0 +1,10 @@
+/* Game 1 (noise): layout bits on top of style.css's .stage / .record-btn / .pred-list. */
+
+.noise-stage { min-height: 460px; }
+.noise-step { display: flex; flex-direction: column; align-items: center; gap: var(--sp-4); width: 100%; }
+.noise-target { display: flex; align-items: center; gap: var(--sp-5); justify-content: center; flex-wrap: wrap; }
+.noise-target .stage__emoji { font-size: 7rem; }
+.noise-target .stage__big { font-size: 3.5rem; }
+.noise-target__kicker { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; text-align: left; }
+.noise-small-emoji { font-size: 3rem; }
+.pred--target .pred__label::after { content: " ★"; color: var(--accent); }

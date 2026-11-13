@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ t('auth.login_title') }}{% endblock %}
+{% block main_class %}app-main--narrow{% endblock %}
+{% block content %}
+<div class="login-card">
+  <div class="login-card__logo">
+    <img class="brand__logo-light" src="{{ url_for('static', filename='img/uke-logo-full.svg') }}" alt="UKE">
+    <img class="brand__logo-dark" src="{{ url_for('static', filename='img/uke-logo-full-dark.svg') }}" alt="UKE">
+  </div>
+  <h1>{{ app_name }}</h1>
+  <p class="muted text-center">{{ t('auth.login_subtitle') }}</p>
+  <form method="post" class="form-grid" novalidate>
+    {{ form.hidden_tag() }}
+    <div>
+      <label for="username">{{ t('auth.username') }}</label>
+      {{ form.username(id="username", autocomplete="username", autofocus=true) }}
+    </div>
+    <div>
+      <label for="password">{{ t('auth.password') }}</label>
+      {{ form.password(id="password", autocomplete="current-password") }}
+    </div>
+    <button type="submit" class="btn btn--lg btn--block">{{ t('auth.login_button') }}</button>
+  </form>
+  <p class="caption text-center" style="margin-top: var(--sp-4)">{{ t('auth.no_account') }}</p>
+</div>
+{% endblock %}

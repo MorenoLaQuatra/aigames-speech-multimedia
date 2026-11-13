@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}{{ t('games.drawing.title') }}{% endblock %}
+{% block main_class %}app-main--wide{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/games/drawing.css') }}">{% endblock %}
+{% block content %}
+{% with slug='drawing', worker='image_gen' %}{% include "partials/game_bar.html" %}{% endwith %}
+{% with slug='drawing' %}{% include "partials/team_picker.html" %}{% endwith %}
+
+{% if not has_challenges %}
+<div class="empty-state"><i class="fa-solid fa-palette"></i>{{ t('drawing.no_challenges') }}</div>
+{% else %}
+<script type="application/json" id="page-config">{{ page_config | tojson }}</script>
+<div class="grid grid--sidebar">
+  <div class="stack">
+    <section class="card drawing-challenge">
+      <div class="card__head">
+        <label for="scene-select" class="label" style="margin:0">{{ t('drawing.scene') }}</label>
+        <div class="row">
+          <select id="scene-select" style="width:auto" aria-label="{{ t('drawing.pick_scene') }}"></select>
+          <button type="button" class="btn btn--ghost btn--sm" id="scene-random"><i class="fa-solid fa-shuffle"></i>{{ t('drawing.random_scene') }}</button>
+        </div>
+      </div>
+      <h2 class="drawing-challenge__title" id="scene-title"></h2>
+      <p class="muted" id="scene-brief"></p>
+      <div class="grid grid--2">
+        <div>
+          <div class="label">{{ t('drawing.make_appear') }} <span class="caption">({{ t('drawing.points_each', n=page_config.pointsPerElement) }})</span></div>
+          <div class="chip-list" id="scene-elements"></div>
+        </div>
+        <div>
+          <div class="label">{{ t('drawing.forbidden') }}</div>
+          <div class="chip-list" id="scene-forbidden"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <label for="prompt">{{ t('drawing.description') }}</label>
+      <textarea id="prompt" rows="3" maxlength="{{ page_config.maxPromptChars }}" placeholder="{{ t('drawing.description_placeholder') }}" class="drawing-prompt"></textarea>
+      <div class="drawing-warning hidden" id="forbidden-warning" role="alert"></div>
+      <div class="row row--between" style="margin-top: var(--sp-3)">
+        <div class="row">
+          <span class="caption"><span id="chars-left"></span> {{ t('drawing.chars_left') }}</span>
+          <span class="caption">·</span>
+          <span class="caption">{{ t('drawing.attempts_left') }} <strong id="attempts-left"></strong></span>
+          <select id="prompt-language" style="width:auto" aria-label="{{ t('drawing.language') }}">
+            <option value="it">Italiano</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn--lg" id="generate"><i class="fa-solid fa-wand-magic-sparkles"></i>{{ t('drawing.generate') }}</button>
+      </div>
+    </section>
+
+    <section class="card drawing-result">
+      <div class="tabs drawing-attempt-tabs hidden" id="attempt-tabs"></div>
+      <div class="drawing-result__grid">
+        <div class="drawing-canvas-wrap" id="canvas-wrap">
+          <div class="drawing-placeholder" id="image-placeholder"><i class="fa-regular fa-image"></i><span id="placeholder-text">{{ t('drawing.no_image_yet') }}</span></div>
+          <canvas id="result-canvas" class="hidden" width="512" height="512"></canvas>
+        </div>
+        <div class="stack drawing-side hidden" id="result-side">
+          <div id="translation-block">
+            <div class="label">{{ t('drawing.what_ai_read') }}</div>
+            <p class="drawing-translation" id="translation"></p>
+            <p class="caption" id="elapsed"></p>
+          </div>
+          <div>
+            <div class="row row--between">
+              <span class="label" style="margin:0">{{ t('drawing.elements_check') }}</span>
+              <label class="checkbox small"><input type="checkbox" id="show-boxes" checked>{{ t('drawing.show_boxes') }}</label>
+            </div>
+            <p class="caption">{{ t('drawing.override_hint') }}</p>
+            <div class="drawing-elements" id="element-checks"></div>
+          </div>
+          <div class="row row--between">
+            <span class="drawing-score">{{ t('drawing.score_label') }}: <strong id="score-preview">0</strong></span>
+            <button type="button" class="btn btn--highlight" id="confirm"><i class="fa-solid fa-check"></i><span id="confirm-label">{{ t('drawing.confirm') }}</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <aside class="stack">
+    {% with slug='drawing' %}{% include "partials/mini_board.html" %}{% endwith %}
+    <div class="card">
+      <h3>{{ t('drawing.how_title') }}</h3>
+      <p class="small muted" style="margin:0">{{ t('drawing.how_body') if translates else t('drawing.how_body_direct') }}</p>
+    </div>
+  </aside>
+</div>
+<p class="footnote">{{ t('drawing.footnote', translation=t('drawing.footnote_translation') if translates else '', images=image_credit) }}</p>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/gamekit.js') }}" defer></script>
+{% if has_challenges %}<script src="{{ url_for('static', filename='js/drawing.js') }}" defer></script>{% endif %}
+{% endblock %}

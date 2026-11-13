@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ t('drawing.content_title') }}{% endblock %}
+{% block content %}
+{% include "partials/admin_tabs.html" %}
+<div class="breadcrumb"><a href="{{ url_for('admin.content') }}">{{ t('admin.tab_content') }}</a> / {{ t('games.drawing.title') }}</div>
+<h2>{{ t('drawing.content_title') }}</h2>
+<p class="muted">{{ t('drawing.content_intro') }}</p>
+
+<div class="grid grid--sidebar">
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>{{ t('drawing.scene') }}</th><th>{{ t('drawing.content_elements') }}</th><th>{{ t('drawing.content_forbidden') }}</th><th>{{ t('admin.status') }}</th><th></th></tr></thead>
+      <tbody>
+      {% for c in challenges %}
+      <tr>
+        <td><strong>{{ localized(c, 'title') }}</strong><br><span class="caption">{{ localized(c, 'brief') }}</span></td>
+        <td class="small">{{ c.elements | map(attribute=locale) | join(', ') }}</td>
+        <td class="small">{{ c.forbidden_list | join(', ') }}</td>
+        <td>{% if c.active %}<span class="badge badge--success">{{ t('drawing.content_active') }}</span>{% else %}<span class="badge">{{ t('drawing.content_inactive') }}</span>{% endif %}</td>
+        <td class="text-right nowrap">
+          <a class="btn btn--ghost btn--sm" href="{{ url_for('drawing.content', edit=c.id) }}#form">{{ t('admin.edit_content') }}</a>
+          <form method="post" action="{{ url_for('drawing.content_toggle', challenge_id=c.id) }}" class="inline-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn--sm {{ 'btn--danger-ghost' if c.active else 'btn--ghost' }}">{{ t('drawing.content_deactivate') if c.active else t('drawing.content_activate') }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <aside class="card" id="form">
+    <h2>{{ t('drawing.content_edit') if editing else t('drawing.content_new') }}</h2>
+    <form method="post" action="{{ url_for('drawing.content_edit', challenge_id=editing.id) if editing else url_for('drawing.content_new') }}" class="form-grid">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div><label for="c-title-it">{{ t('drawing.content_title_it') }}</label><input id="c-title-it" type="text" name="title_it" maxlength="120" required value="{{ editing.title_it if editing else '' }}"></div>
+      <div><label for="c-title-en">{{ t('drawing.content_title_en') }}</label><input id="c-title-en" type="text" name="title_en" maxlength="120" required value="{{ editing.title_en if editing else '' }}"></div>
+      <div><label for="c-brief-it">{{ t('drawing.content_brief_it') }}</label><textarea id="c-brief-it" name="brief_it" rows="2">{{ editing.brief_it if editing else '' }}</textarea></div>
+      <div><label for="c-brief-en">{{ t('drawing.content_brief_en') }}</label><textarea id="c-brief-en" name="brief_en" rows="2">{{ editing.brief_en if editing else '' }}</textarea></div>
+      <div><label for="c-elements">{{ t('drawing.content_elements') }}</label>
+        <textarea id="c-elements" name="elements" rows="6" class="mono" required>{{ editing_elements }}</textarea>
+        <div class="field-hint">{{ t('drawing.content_elements_hint') }}</div></div>
+      <div><label for="c-forbidden">{{ t('drawing.content_forbidden') }}</label>
+        <textarea id="c-forbidden" name="forbidden_words" rows="6">{{ editing.forbidden_words if editing else '' }}</textarea>
+        <div class="field-hint">{{ t('drawing.content_forbidden_hint') }}</div></div>
+      <div class="row">
+        <button type="submit" class="btn">{{ t('common.save') }}</button>
+        {% if editing %}<a class="btn btn--ghost" href="{{ url_for('drawing.content') }}">{{ t('common.cancel') }}</a>{% endif %}
+      </div>
+    </form>
+  </aside>
+</div>
+{% endblock %}

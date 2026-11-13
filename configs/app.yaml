@@ -1,0 +1,222 @@
+server:
+  # Behind a Cloudflare tunnel the app only needs to listen on localhost.
+  # Set 0.0.0.0 to reach it from another device on the LAN during setup.
+  host: "127.0.0.1"
+  # Checked `ss -ltn` on gfanara-pt7920 (2026-11-12): 8000 and 11434 are
+  # taken by other apps on this machine; 9000 and the worker ports 8901-8903
+  # were free. The Cloudflare tunnel points here (deploy/setup-local-tunnel.sh).
+  port: 9000
+  # MUST stay 1: the model manager (services/model_manager.py) keeps the
+  # state of the model worker processes in memory. Two gunicorn workers would
+  # each think they own the model processes.
+  workers: 1
+  threads: 16
+  # Image generation / voice cloning on CPU can take a while per request.
+  timeout_seconds: 300
+  debug: false
+
+database:
+  path: "instance/ai_games.db"
+
+storage:
+  # Per-match recordings and generated media (voice references, cloned clips,
+  # generated images). Deleted per match on archive, see privacy below.
+  media_dir: "data/media"
+
+app:
+  name: "AI Games"
+  # Also how long the CSRF token of an open page stays valid (app.py).
+  session_lifetime_hours: 12
+  # Times are stored in UTC and shown in this zone.
+  timezone: "Europe/Rome"
+  max_upload_mb: 20
+
+privacy:
+  # Voice recordings and cloned clips are personal data (often minors'
+  # voices). When true they are deleted as soon as a match is archived;
+  # only team names and scores are kept.
+  delete_media_on_archive: true
+
+scoring:
+  # Every game produces raw points on its own scale (a sound hit is worth a
+  # few points, a run in the arcade game can be worth hundreds), so the
+  # final ranking does not add raw points together. Each game awards
+  # placement points: 1st gets the first value, 2nd the second, ...; every
+  # place beyond the list gets the last value (4th, 5th, ... all get 4).
+  # Ties share the placement. With four games the maximum is 40.
+  # Raw points break ties in the final ranking.
+  placement_points: [10, 8, 6, 4]
+
+# One process per model family, started on demand by the webapp and stopped
+# when idle (or when another one needs the GPU) - see services/model_manager.py.
+# python: interpreter used to launch the worker; "self" means the same
+# interpreter running the webapp (the `ai-games` conda env has everything).
+models:
+  # true: starting a worker stops every other running worker first, so only
+  # one model family occupies the GPU at a time.
+  exclusive: true
+  # A worker with no requests for this long is stopped to free memory.
+  idle_minutes: 20
+  # How often the idle reaper checks.
+  reaper_interval_seconds: 30
+  workers:
+    audio_classifier:
+      script: "workers/audio_classifier.py"
+      python: "self"
+      host: "127.0.0.1"
+      port: 8901
+      device: "cuda"
+      startup_timeout_seconds: 300
+      request_timeout_seconds: 60
+    voice_clone:
+      script: "workers/voice_clone.py"
+      python: "self"
+      host: "127.0.0.1"
+      port: 8902
+      device: "cuda"
+      startup_timeout_seconds: 600
+      request_timeout_seconds: 300
+    image_gen:
+      script: "workers/image_gen.py"
+      python: "self"
+      host: "127.0.0.1"
+      port: 8903
+      device: "cuda"
+      startup_timeout_seconds: 600
+      request_timeout_seconds: 300
+
+games:
+  noise:
+    turn_seconds: 150
+    record_seconds: 4
+    countdown_seconds: 3
+    # The target counts as recognised if it appears within the first
+    # len(points_by_rank) predictions; points depend on its rank.
+    points_by_rank: [3, 2, 1]
+    top_k_shown: 5
+    model_id: "MIT/ast-finetuned-audioset-10-10-0.4593"
+  voices:
+    turn_seconds: 600
+    reference_seconds: 12
+    clips_per_volunteer: 2
+    # Points for each right guess (decimals allowed).
+    points_correct: 2.5
+    # true: a team also scores when it recognises its own volunteer's clone.
+    own_team_can_score: true
+    language: "it"
+    exaggeration: 0.5
+    t3_model: "v3"
+    # true: the instructor must confirm, per volunteer, that consent to record
+    # and clone the voice was given (by a parent/guardian via the school for
+    # minors) before the reference can be recorded. Stored on the volunteer.
+    require_consent: false
+  drawing:
+    turn_seconds: 150
+    attempts_per_team: 2
+    points_per_element: 2
+    max_prompt_chars: 300
+    detection_threshold: 0.2
+    translation_model_id: "Helsinki-NLP/opus-mt-it-en"
+    detector_model_id: "google/owlv2-base-patch16-ensemble"
+    # Which text-to-image model draws: one of the keys of image_models.
+    # Restart the app after changing it.
+    image_model: "flux2_klein_4b"
+    image_models:
+      # Small and fast, runs on CPU too; only understands English, so the
+      # description is translated first. Often misses or merges elements.
+      sd_turbo:
+        model_id: "stabilityai/sd-turbo"
+        credit: "Stability AI SD-Turbo"
+        translate_prompt: true
+        image_size: 512
+        inference_steps: 2
+        guidance_scale: 0.0
+        cpu_dtype: "float32"
+        cuda_dtype: "float16"
+        cuda_memory: "full"
+        # Z-Image only (see below); sd-turbo is fine in float16.
+        cuda_fp16_guard: false
+      # FLUX.2 [klein] 4B (Black Forest Labs, Apache-2.0): 4B parameters +
+      # Qwen3-4B text encoder, 4 steps, reads Italian directly. Measured on the
+      # Quadro RTX 5000 16 GB (2026-11-12, 768px):
+      #   float16 + stream_text_encoder  ~4 s/image, 8.7 GiB peak (held while loaded)
+      #   float16 + model_offload        ~20 s/image, 7.8 GiB peak
+      #   bfloat16 + model_offload       ~38 s/image, 9.2 GiB peak
+      # float16 needs no guard; drew every element of the test scenes.
+      flux2_klein_4b:
+        model_id: "black-forest-labs/FLUX.2-klein-4B"
+        credit: "Black Forest Labs FLUX.2 [klein] 4B"
+        translate_prompt: false
+        image_size: 768
+        inference_steps: 4
+        guidance_scale: 1.0
+        cpu_dtype: "float32"
+        cuda_dtype: "float16"
+        cuda_memory: "stream_text_encoder"
+        cuda_fp16_guard: false
+      # 6B parameters, far better at drawing what the text says, and reads
+      # Italian directly (multilingual text encoder). Needs the GPU: on CPU an
+      # image takes many minutes.
+      # Measured on the Quadro RTX 5000 16 GB (2026-11-12, 768px, 9 steps):
+      #   float16 + model_offload + cuda_fp16_guard  ~36 s/image, 11.9 GiB peak
+      #   bfloat16 + model_offload                   ~75 s/image, 13.1 GiB peak
+      #   float16 without the guard                  black images (overflow)
+      #   full: does not fit (transformer ~11.5 GB + text encoder ~7.5 GB)
+      # Turing has no fast bfloat16, hence float16 + guard. On an 8 GB card
+      # use cuda_memory: "group_offload" (weights stream from system RAM).
+      z_image_turbo:
+        model_id: "Tongyi-MAI/Z-Image-Turbo"
+        credit: "Tongyi-MAI Z-Image-Turbo"
+        translate_prompt: false
+        image_size: 768
+        # 9 steps = the 8 model evaluations the turbo model was distilled for.
+        inference_steps: 9
+        guidance_scale: 0.0
+        cpu_dtype: "float32"
+        cuda_dtype: "float16"
+        cuda_memory: "model_offload"
+        # float16 only: run the few ops that overflow float16 in float32
+        # (workers/image_gen.py guard_fp16_overflow).
+        cuda_fp16_guard: true
+  runner:
+    turn_seconds: 150
+    # Training: each command word is recorded push-to-talk (hold, say it,
+    # release = one example), the room noise in one go; then a small head is
+    # trained on top of the speech-commands base model, in the browser.
+    examples_per_command: 4
+    background_seconds: 4
+    # Examples are trimmed around the voice; at least 1 s (the model's
+    # window) is always kept, at most this much.
+    max_example_seconds: 2
+    # Extra training copies with room noise mixed in, as a fraction of the
+    # examples (0.5 = half as many again) - helps with only a few examples.
+    augment_noise_ratio: 0.5
+    training_epochs: 30
+    # One scored run. A team plays twice: the trainer, then someone else.
+    # Only each team's best run per phase counts (replaying can't farm points).
+    run_seconds: 45
+    lives: 3
+    points_per_coin: 10
+    points_per_second: 1
+    # Recognition: a command fires when its probability is >= threshold;
+    # the same sound can't fire again within suppression_ms (one sound spans
+    # several overlapping analysis windows).
+    probability_threshold: 0.75
+    suppression_ms: 700
+    overlap_factor: 0.75
+    # Game pace - deliberately slow, recognition takes ~0.3-0.8 s: an
+    # obstacle is on screen for fall_seconds before it reaches the runner.
+    fall_seconds: 4.0
+    spawn_interval_seconds: 1.8
+    jump_seconds: 1.1
+    # Server-side sanity check on submitted runs: at most one coin per spawn
+    # (+ slack), and run length <= run_seconds + seconds_slack.
+    seconds_slack: 3
+
+deploy:
+  # Public hostname, routed to server.port by deploy/setup-local-tunnel.sh.
+  hostname: "aigames.mlaquatra.me"
+  # Locally-managed tunnel of this machine (`cloudflared tunnel list`);
+  # credentials in ~/.cloudflared/<tunnel id>.json, ingress in
+  # ~/.cloudflared/config.yml (other apps can add their hostnames there).
+  tunnel: "stmlab-rtx5000"

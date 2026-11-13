@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.tab_users') }}{% endblock %}
+{% block content %}
+{% include "partials/admin_tabs.html" %}
+<div class="grid grid--sidebar">
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>{{ t('auth.username') }}</th><th>{{ t('admin.role') }}</th><th>{{ t('admin.status') }}</th><th>{{ t('admin.last_login') }}</th><th class="num">{{ t('nav.matches') }}</th><th></th></tr></thead>
+      <tbody>
+      {% for u in users %}
+      <tr>
+        <td><strong>{{ u.username }}</strong>{% if u.full_name %}<br><span class="caption">{{ u.full_name }}</span>{% endif %}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin.change_role', user_id=u.id) }}" class="inline-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <select name="role" class="js-autosubmit" aria-label="{{ t('admin.role') }}" style="width:auto" {{ 'disabled' if u.id == current_user.id }}>
+              {% for r in roles %}<option value="{{ r }}" {{ 'selected' if u.role == r }}>{{ t('roles.' ~ r) }}</option>{% endfor %}
+            </select>
+          </form>
+        </td>
+        <td>{% if u.enabled %}<span class="badge badge--success">{{ t('admin.enabled') }}</span>{% else %}<span class="badge badge--danger">{{ t('admin.disabled') }}</span>{% endif %}</td>
+        <td class="caption nowrap">{{ u.last_login_at | localdt if u.last_login_at else t('admin.never') }}</td>
+        <td class="num">{{ match_counts.get(u.id, 0) }}</td>
+        <td class="text-right nowrap">
+          <details class="inline-details" style="display:inline-block; text-align:left">
+            <summary>{{ t('admin.reset_password') }}</summary>
+            <form method="post" action="{{ url_for('admin.reset_password', user_id=u.id) }}" class="input-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="password" name="password" minlength="{{ min_length }}" required autocomplete="new-password" aria-label="{{ t('auth.new_password') }}">
+              <button type="submit" class="btn btn--sm">{{ t('common.save') }}</button>
+            </form>
+          </details>
+          {% if u.id != current_user.id %}
+          <form method="post" action="{{ url_for('admin.toggle_user', user_id=u.id) }}" class="inline-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn--sm {{ 'btn--danger-ghost' if u.enabled else 'btn--ghost' }}">{{ t('admin.disable') if u.enabled else t('admin.enable') }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <aside class="card">
+    <h2>{{ t('admin.new_user') }}</h2>
+    <form method="post" action="{{ url_for('admin.create_user') }}" class="form-grid">
+      {{ form.hidden_tag() }}
+      <div><label for="u-name">{{ t('auth.username') }}</label>{{ form.username(id="u-name", required=true, autocomplete="off") }}</div>
+      <div><label for="u-full">{{ t('admin.full_name') }}</label>{{ form.full_name(id="u-full") }}</div>
+      <div><label for="u-pass">{{ t('auth.password') }}</label>{{ form.password(id="u-pass", required=true, minlength=min_length, autocomplete="new-password") }}
+        <div class="field-hint">{{ t('auth.password_hint', n=min_length) }}</div></div>
+      <div><label for="u-role">{{ t('admin.role') }}</label>
+        <select id="u-role" name="role">{% for r in roles %}<option value="{{ r }}" {{ 'selected' if r == 'instructor' }}>{{ t('roles.' ~ r) }}</option>{% endfor %}</select></div>
+      <button type="submit" class="btn btn--block"><i class="fa-solid fa-user-plus"></i>{{ t('admin.create_user') }}</button>
+    </form>
+    <p class="caption" style="margin-top: var(--sp-3)">{{ t('admin.roles_explain') }}</p>
+  </aside>
+</div>
+{% endblock %}

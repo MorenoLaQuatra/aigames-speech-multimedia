@@ -1,0 +1,27 @@
+# Secrets (copy .env.example to .env)
+.env
+
+# Runtime data: database (+ backups), match media, logs, pid files
+instance/
+*.db
+*.db-journal
+*.bak-*
+data/
+logs/
+*.log
+*.pid
+
+# Internal development notes (not for the repository)
+recap.md
+CLAUDE.md
+.claude/
+
+# Python / tooling
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.vscode/
+.idea/
+.DS_Store

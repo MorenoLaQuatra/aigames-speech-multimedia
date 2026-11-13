@@ -1,0 +1,13 @@
+{# Whose turn is it. Usage: {% with slug='noise' %}{% include "partials/team_picker.html" %}{% endwith %} #}
+<div class="row" style="margin-bottom: var(--sp-4)">
+  <span class="label" style="margin:0">{{ t('game.turn_of') }}</span>
+  <div class="team-picker" data-team-picker data-match-id="{{ match.id }}" data-game="{{ slug }}" role="group" aria-label="{{ t('game.turn_of') }}">
+    {% for team in match.teams %}
+    <button type="button" class="team-pick" style="--team-color: {{ team.color }}"
+            data-team-id="{{ team.id }}" data-team-name="{{ team.name }}" data-team-color="{{ team.color }}">
+      <span class="team-dot" style="background: {{ team.color }}"></span>{{ team.name }}
+      <span class="team-pick__points">0</span>
+    </button>
+    {% endfor %}
+  </div>
+</div>

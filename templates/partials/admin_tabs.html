@@ -1,0 +1,8 @@
+<div class="page-head">
+  <div><h1>{{ t('nav.admin') }}</h1><p>{{ t('admin.intro') }}</p></div>
+</div>
+<nav class="tabs" aria-label="{{ t('nav.admin') }}">
+  <a class="tab {{ 'tab--active' if request.endpoint == 'admin.users' }}" href="{{ url_for('admin.users') }}"><i class="fa-solid fa-users"></i> {{ t('admin.tab_users') }}</a>
+  <a class="tab {{ 'tab--active' if request.endpoint == 'admin.content' or (request.endpoint or '').endswith('.content') }}" href="{{ url_for('admin.content') }}"><i class="fa-solid fa-layer-group"></i> {{ t('admin.tab_content') }}</a>
+  <a class="tab {{ 'tab--active' if request.endpoint == 'admin.models' }}" href="{{ url_for('admin.models') }}"><i class="fa-solid fa-microchip"></i> {{ t('admin.tab_models') }}</a>
+</nav>

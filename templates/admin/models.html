@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ t('admin.tab_models') }}{% endblock %}
+{% block content %}
+{% include "partials/admin_tabs.html" %}
+<p class="muted">{{ t('admin.models_intro') }}</p>
+<div class="row" style="margin-bottom: var(--sp-4)">
+  <button type="button" class="btn btn--danger-ghost" id="stop-all" data-url="{{ url_for('models_api.stop_all') }}"><i class="fa-solid fa-power-off"></i>{{ t('admin.stop_all') }}</button>
+</div>
+<script type="application/json" id="page-config">{{ {
+  "statusUrl": url_for('models_api.all_status'),
+  "startUrl": url_for('models_api.start', name='__NAME__'),
+  "stopUrl": url_for('models_api.stop', name='__NAME__'),
+  "strings": {
+    "stopped": t('model.stopped'), "starting": t('model.starting'), "ready": t('model.ready'), "failed": t('model.failed'),
+    "start": t('admin.start'), "stop": t('admin.stop'), "device": t('admin.device'), "uptime": t('admin.uptime'),
+    "idle": t('admin.idle'), "names": {"audio_classifier": t('admin.worker_audio_classifier'), "voice_clone": t('admin.worker_voice_clone'), "image_gen": t('admin.worker_image_gen')}
+  }
+} | tojson }}</script>
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>{{ t('admin.worker') }}</th><th>{{ t('admin.status') }}</th><th>{{ t('admin.device') }}</th><th>{{ t('admin.uptime') }}</th><th>{{ t('admin.idle') }}</th><th></th></tr></thead>
+    <tbody id="worker-rows"></tbody>
+  </table>
+</div>
+<p class="caption" style="margin-top: var(--sp-3)">{{ t('admin.models_logs') }}</p>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/gamekit.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/admin_models.js') }}" defer></script>
+{% endblock %}

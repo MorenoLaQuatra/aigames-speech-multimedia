@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ t('games.' ~ slug ~ '.title') }}{% endblock %}
+{% block content %}
+<div class="empty-state">
+  <i class="fa-solid fa-person-digging"></i>
+  <h2>{{ t('games.' ~ slug ~ '.title') }}</h2>
+  <p>{{ t('games.' ~ slug ~ '.description') }}</p>
+</div>
+{% endblock %}

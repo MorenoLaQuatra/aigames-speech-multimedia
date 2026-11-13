@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{{ t('games.noise.title') }} · {{ t('admin.tab_content') }}{% endblock %}
+{% block content %}
+{% include "partials/admin_tabs.html" %}
+<div class="breadcrumb"><a href="{{ url_for('admin.content') }}">{{ t('admin.tab_content') }}</a> / {{ t('games.noise.title') }}</div>
+
+{% set fv = form_values or ({
+  "name_it": form_target.name_it, "name_en": form_target.name_en, "emoji": form_target.emoji, "labels": form_target.labels
+} if form_target else {"name_it": "", "name_en": "", "emoji": "", "labels": ""}) %}
+
+<div class="grid grid--sidebar">
+  <section>
+    <h2>{{ t('noise.content_targets') }} <span class="caption">({{ targets | selectattr('active') | list | length }} {{ t('noise.content_active_count') }})</span></h2>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th></th><th>{{ t('noise.content_name') }}</th><th>{{ t('noise.content_labels') }}</th><th>{{ t('admin.status') }}</th><th></th></tr></thead>
+        <tbody>
+        {% for target in targets %}
+        <tr>
+          <td style="font-size: 1.6rem">{{ target.emoji }}</td>
+          <td><strong>{{ target.name_it }}</strong><br><span class="caption">{{ target.name_en }}</span></td>
+          <td class="small">{{ target.label_list | join(' · ') }}</td>
+          <td>{% if target.active %}<span class="badge badge--success">{{ t('admin.enabled') }}</span>{% else %}<span class="badge">{{ t('admin.disabled') }}</span>{% endif %}</td>
+          <td class="text-right nowrap">
+            <a class="btn btn--ghost btn--sm" href="{{ url_for('noise.content', edit=target.id) }}#form">{{ t('admin.edit_content') }}</a>
+            <form method="post" action="{{ url_for('noise.content_toggle', target_id=target.id) }}" class="inline-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn--sm {{ 'btn--danger-ghost' if target.active else 'btn--ghost' }}">{{ t('admin.disable') if target.active else t('admin.enable') }}</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="muted">{{ t('noise.no_targets') }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <aside class="card" id="form">
+    <h2>{{ t('noise.content_edit') if form_target else t('noise.content_new') }}</h2>
+    <form method="post" action="{{ url_for('noise.content_save') }}" class="form-grid">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if form_target %}<input type="hidden" name="target_id" value="{{ form_target.id }}">{% endif %}
+      <div class="form-row">
+        <div><label for="n-it">{{ t('noise.content_name_it') }}</label><input id="n-it" type="text" name="name_it" maxlength="80" required value="{{ fv.name_it }}"></div>
+        <div><label for="n-en">{{ t('noise.content_name_en') }}</label><input id="n-en" type="text" name="name_en" maxlength="80" required value="{{ fv.name_en }}"></div>
+      </div>
+      <div><label for="n-emoji">Emoji</label><input id="n-emoji" type="text" name="emoji" maxlength="16" value="{{ fv.emoji }}"></div>
+      <div>
+        <label for="n-labels">{{ t('noise.content_labels') }}</label>
+        <textarea id="n-labels" name="labels" rows="6" required>{{ fv.labels }}</textarea>
+        <div class="field-hint">{{ t('noise.content_labels_hint') }}</div>
+      </div>
+      <div>
+        <label for="n-search">{{ t('noise.content_label_search') }}</label>
+        <input id="n-search" type="search" list="audioset-labels" placeholder="{{ t('noise.content_label_search_placeholder') }}">
+        <datalist id="audioset-labels">{% for label in audioset_labels %}<option value="{{ label }}">{% endfor %}</datalist>
+        <div class="field-hint">{{ t('noise.content_label_search_hint') }}</div>
+      </div>
+      <div class="row">
+        <button type="submit" class="btn">{{ t('common.save') }}</button>
+        {% if form_target %}<a class="btn btn--ghost" href="{{ url_for('noise.content') }}">{{ t('common.cancel') }}</a>{% endif %}
+      </div>
+    </form>
+  </aside>
+</div>
+{% endblock %}

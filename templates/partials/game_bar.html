@@ -1,0 +1,43 @@
+{# Top bar of every game page: title, model status, turn timer, finish/reopen.
+   Usage: {% with slug='noise', worker='audio_classifier', turn_seconds=150 %}{% include "partials/game_bar.html" %}{% endwith %}
+   worker may be none (model runs in the browser). #}
+<div class="game-bar">
+  <div class="game-bar__title">
+    <i class="fa-solid {{ games | selectattr('slug', 'equalto', slug) | map(attribute='icon') | first }}"></i>
+    <div>
+      <div class="breadcrumb"><a href="{{ url_for('home.index') }}">{{ t('nav.dashboard') }}</a> / {{ match.name }}</div>
+      <h1>{{ t('games.' ~ slug ~ '.title') }}</h1>
+    </div>
+  </div>
+  <span class="spacer"></span>
+  {% if worker %}
+  <span class="model-badge" data-model-badge data-state="stopped"
+        data-status-url="{{ url_for('models_api.status', name=worker) }}"
+        data-start-url="{{ url_for('models_api.start', name=worker) }}"
+        data-labels='{{ {"stopped": t("model.stopped"), "starting": t("model.starting"), "ready": t("model.ready"), "failed": t("model.failed")} | tojson }}'>
+    <span class="model-badge__dot"></span><span class="model-badge__label"></span>
+    <button type="button" class="btn btn--ghost btn--sm model-badge__retry hidden">{{ t('model.retry') }}</button>
+  </span>
+  {% endif %}
+  <div class="turn-timer" data-turn-timer data-seconds="{{ turn_seconds }}"
+       data-labels='{{ {"start": t("timer.start"), "pause": t("timer.pause")} | tojson }}'>
+    <span class="turn-timer__value" aria-live="off">0:00</span>
+    <button type="button" class="btn btn--sm" data-timer-toggle></button>
+    <button type="button" class="btn btn--ghost btn--sm" data-timer-reset title="{{ t('timer.reset') }}" aria-label="{{ t('timer.reset') }}"><i class="fa-solid fa-rotate-left"></i></button>
+  </div>
+  <div class="game-bar__finish">
+    {% if slug in current_finished_games %}
+    <span class="badge badge--success"><i class="fa-solid fa-flag-checkered"></i>{{ t('game.finished') }}</span>
+    <a class="btn btn--highlight btn--sm" href="{{ url_for('matches.game_display', match_id=match.id, game=slug) }}"><i class="fa-solid fa-tv"></i>{{ t('game.show_results') }}</a>
+    <form method="post" action="{{ url_for('matches.reopen_game_route', match_id=match.id, game=slug) }}" class="inline-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn--ghost btn--sm"><i class="fa-solid fa-lock-open"></i>{{ t('game.reopen') }}</button>
+    </form>
+    {% else %}
+    <form method="post" action="{{ url_for('matches.finish', match_id=match.id, game=slug) }}" class="inline-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn--sm" title="{{ t('game.finish_hint') }}"><i class="fa-solid fa-flag-checkered"></i>{{ t('game.finish') }}</button>
+    </form>
+    {% endif %}
+  </div>
+</div>

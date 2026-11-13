@@ -1,0 +1,37 @@
+{# Full-screen results of one game, shown when the game is finished.
+   Teams start hidden; "Rivela" shows them one by one from last to first. #}
+{% extends "base.html" %}
+{% block title %}{{ t('games.' ~ game.slug ~ '.title') }} · {{ match.name }}{% endblock %}
+{% block body_class %}display{% endblock %}
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block main_class %}hidden{% endblock %}
+{% block content %}{% endblock %}
+{% block scripts %}
+<script type="application/json" id="page-config">{{ page_config | tojson }}</script>
+<header class="display__head">
+  <img src="{{ url_for('static', filename='img/uke-logo-full-dark.svg') }}" alt="UKE">
+  <div>
+    <h1 class="display__title"><i class="fa-solid {{ game.icon }} display__game-icon"></i>{{ t('games.' ~ game.slug ~ '.title') }}</h1>
+    <div class="display__subtitle">{{ t('display.game_results') }} · {{ match.name }}</div>
+  </div>
+</header>
+<div class="display__body display__body--single">
+  <section class="display__panel">
+    <div class="display-legend">
+      <span>{{ t('display.col_game_points') }}</span>
+      <span>{{ t('display.col_placement', points=placement_text) }}</span>
+    </div>
+    <div id="game-rows"></div>
+  </section>
+</div>
+<div class="display__controls">
+  <button type="button" class="btn btn--highlight" id="reveal-next" title="{{ t('display.reveal_hint') }}"><i class="fa-solid fa-eye"></i>{{ t('display.reveal') }}</button>
+  <button type="button" class="btn btn--ghost" id="show-all"><i class="fa-solid fa-list-ol"></i>{{ t('display.show_all') }}</button>
+  <a class="btn btn--ghost" href="{{ url_for('matches.display', match_id=match.id) }}"><i class="fa-solid fa-trophy"></i>{{ t('display.overall') }}</a>
+  <button type="button" class="btn btn--ghost" id="fullscreen"><i class="fa-solid fa-expand"></i>{{ t('display.fullscreen') }}</button>
+  <a class="btn btn--ghost" href="{{ back_url }}" title="{{ t('display.back_to_game') }}" aria-label="{{ t('display.back_to_game') }}"><i class="fa-solid fa-xmark"></i></a>
+</div>
+<script src="{{ url_for('static', filename='js/gamekit.js') }}"></script>
+<script src="{{ url_for('static', filename='js/game_display.js') }}"></script>
+{% endblock %}

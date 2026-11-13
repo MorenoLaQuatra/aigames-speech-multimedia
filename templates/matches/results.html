@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ t('matches.results') }} · {{ match.name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('matches.index') }}">{{ t('nav.matches') }}</a> / <a href="{{ url_for('matches.detail', match_id=match.id) }}">{{ match.name }}</a> / {{ t('matches.results') }}</div>
+<div class="page-head">
+  <div>
+    <h1>{{ t('results.title') }}</h1>
+    <p>{{ match.name }} · {{ match.school }} · {{ match.play_date.strftime('%d/%m/%Y') }}</p>
+  </div>
+  <div class="page-head__actions">
+    <a class="btn btn--highlight" href="{{ url_for('matches.display', match_id=match.id) }}" target="_blank" rel="noopener"><i class="fa-solid fa-tv"></i>{{ t('home.projector') }}</a>
+    <button type="button" class="btn btn--ghost" data-print><i class="fa-solid fa-print"></i>{{ t('results.print') }}</button>
+  </div>
+</div>
+
+{% set final = standings.final %}
+{% if final and standings.played %}
+<div class="podium">
+  {% for row in final[:3] %}
+  <div class="podium__step podium__step--{{ row.rank if row.rank <= 3 else 3 }}">
+    <div class="podium__place">{{ row.rank }}°</div>
+    <div class="podium__name"><span class="team-dot" style="background: {{ row.team.color }}"></span> {{ row.team.name }}</div>
+    <div class="small">{{ t('results.n_points', n=row.placement_total) }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<section>
+  <h2>{{ t('results.final') }}</h2>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>#</th><th>{{ t('matches.team') }}</th>
+          {% for game in games %}<th class="num" title="{{ t('results.rank_and_points') }}">{{ t('games.' ~ game.slug ~ '.title') }}</th>{% endfor %}
+          <th class="num">{{ t('results.placement_points') }}</th>
+          <th class="num">{{ t('results.raw_total') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for row in final %}
+      <tr>
+        <td class="rank-cell"><span class="{{ 'rank-1' if row.rank == 1 and standings.played }}">{{ row.rank }}</span></td>
+        <td><span class="team-name"><span class="team-dot" style="background: {{ row.team.color }}"></span>{{ row.team.name }}</span></td>
+        {% for game in games %}
+        <td class="num">
+          {% if game.slug in standings.played %}{{ row.ranks[game.slug] }}° <span class="caption">({{ row.points[game.slug] | pts }})</span>{% else %}<span class="muted">—</span>{% endif %}
+        </td>
+        {% endfor %}
+        <td class="num"><strong>{{ row.placement_total }}</strong></td>
+        <td class="num muted">{{ row.raw_total }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="caption" style="margin-top: var(--sp-2)">{{ t('results.explain', points=placement_points | join(', ')) }}</p>
+</section>
+
+<section style="margin-top: var(--sp-5)">
+  <h2>{{ t('results.per_game') }}</h2>
+  <div class="grid grid--2">
+    {% for game in games %}
+    <div class="card">
+      <div class="card__head">
+        <h3><i class="fa-solid {{ game.icon }}" style="color: var(--accent)"></i> {{ t('games.' ~ game.slug ~ '.title') }}</h3>
+        {% if game.slug not in standings.played %}<span class="badge">{{ t('results.not_played') }}</span>{% endif %}
+      </div>
+      <table class="table table--compact">
+        <thead><tr><th>#</th><th>{{ t('matches.team') }}</th><th class="num">{{ t('results.game_score') }}</th><th class="num">{{ t('results.placement_points_short') }}</th></tr></thead>
+        <tbody>
+        {% for row in standings.per_game[game.slug] %}
+        <tr>
+          <td class="rank-cell">{{ row.rank if game.slug in standings.played else '—' }}</td>
+          <td><span class="team-name"><span class="team-dot" style="background: {{ row.team.color }}"></span>{{ row.team.name }}</span></td>
+          <td class="num">{{ row.points | pts }}</td>
+          <td class="num">{{ row.placement_points }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/results.js') }}" defer></script>
+{% endblock %}

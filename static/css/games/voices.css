@@ -1,0 +1,39 @@
+/* Game 2 - voices. Colours only through the tokens in style.css. */
+
+.vo-reading { font-size: 1.15rem; line-height: 1.6; max-width: 70ch; }
+
+.vo-team { background: var(--bg); border: 1px solid var(--border); border-top: 4px solid var(--team-color, var(--accent)); border-radius: var(--radius); padding: var(--sp-4); }
+.vo-team h3 { display: flex; align-items: center; gap: var(--sp-2); }
+.vo-volunteer { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; padding: var(--sp-2) 0; border-bottom: 1px solid var(--border); }
+.vo-volunteer:last-of-type { border-bottom: 0; }
+.vo-volunteer__name { font-weight: 700; flex: 1; min-width: 8ch; }
+.vo-volunteer audio { height: 32px; max-width: 220px; }
+.vo-add { margin-top: var(--sp-3); }
+
+.vo-tracker { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.vo-round {
+  min-width: 44px; padding: var(--sp-1) var(--sp-2); border: 2px solid var(--border); border-radius: var(--radius);
+  background: var(--bg); color: var(--text); font: inherit; font-weight: 800; cursor: pointer; text-align: center;
+}
+.vo-round[data-status="pending"] { color: var(--text-muted); border-style: dashed; }
+.vo-round[data-status="failed"] { color: var(--danger); border-color: var(--danger); }
+.vo-round[data-revealed="true"] { background: var(--surface-2); }
+.vo-round--current { border-color: var(--accent); background: var(--accent-soft); }
+
+.vo-play { width: 128px; height: 128px; border-radius: 50%; border: 6px solid var(--accent-soft); background: var(--accent); color: var(--accent-text); font-size: 2.6rem; cursor: pointer; }
+.vo-play:hover { background: var(--accent-hover); }
+.vo-answer { display: flex; align-items: center; gap: var(--sp-3); font-size: 1.8rem; font-weight: 800; }
+.vo-answer .team-dot { width: 22px; height: 22px; }
+.vo-phrase { font-style: italic; color: var(--text-muted); max-width: 640px; }
+
+.vo-guess { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: var(--sp-3); align-items: center; padding: var(--sp-2) 0; border-bottom: 1px solid var(--border); }
+.vo-guess:last-child { border-bottom: 0; }
+.vo-guess__result { min-width: 10ch; text-align: right; font-weight: 800; }
+.vo-guess__result--right { color: var(--success); }
+.vo-guess__result--wrong { color: var(--danger); }
+@media (max-width: 640px) {
+  .vo-guess { grid-template-columns: minmax(0, 1fr); }
+  .vo-guess__result { text-align: left; }
+}
+.vo-consent { flex-basis: 100%; align-items: flex-start; font-weight: 400; padding: var(--sp-2); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.vo-consent input { margin-top: 3px; flex: 0 0 auto; }

@@ -1,0 +1,6 @@
+<form method="post" action="{{ url_for('language.set_language') }}" class="lang-switch">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="next" value="{{ request.path }}">
+  <button type="submit" name="locale" value="it" class="lang-btn {{ 'lang-btn--active' if locale == 'it' }}" aria-label="{{ t('nav.language_toggle') }}">IT</button>
+  <button type="submit" name="locale" value="en" class="lang-btn {{ 'lang-btn--active' if locale == 'en' }}" aria-label="{{ t('nav.language_toggle') }}">EN</button>
+</form>

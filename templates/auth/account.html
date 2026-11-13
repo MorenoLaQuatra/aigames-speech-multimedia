@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ t('nav.account') }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ t('nav.account') }}</h1>
+    <p>{{ current_user.display_name }} · <span class="badge badge--accent">{{ t('roles.' ~ current_user.role) }}</span></p>
+  </div>
+</div>
+<div class="grid grid--2">
+  <div class="card">
+    <h2>{{ t('auth.change_password') }}</h2>
+    <form method="post" class="form-grid">
+      {{ form.hidden_tag() }}
+      <div><label for="cur">{{ t('auth.current_password') }}</label>{{ form.current_password(id="cur", autocomplete="current-password") }}</div>
+      <div><label for="new">{{ t('auth.new_password') }}</label>{{ form.new_password(id="new", autocomplete="new-password", minlength=min_length) }}
+        <div class="field-hint">{{ t('auth.password_hint', n=min_length) }}</div></div>
+      <div><label for="conf">{{ t('auth.confirm_password') }}</label>{{ form.confirm_password(id="conf", autocomplete="new-password") }}</div>
+      <div><button type="submit" class="btn">{{ t('common.save') }}</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

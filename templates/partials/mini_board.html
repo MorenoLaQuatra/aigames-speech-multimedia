@@ -1,0 +1,24 @@
+{# Live leaderboard for one game. Usage: {% with slug='noise' %}{% include "partials/mini_board.html" %}{% endwith %} #}
+<div class="card" data-mini-board data-game="{{ slug }}" data-url="{{ url_for('matches.api_standings', match_id=match.id) }}">
+  <div class="card__head">
+    <h3>{{ t('game.leaderboard') }}</h3>
+    <a class="small" href="{{ url_for('matches.results', match_id=match.id) }}">{{ t('game.all_results') }}</a>
+  </div>
+  <div class="mini-board"></div>
+  <details class="inline-details" style="margin-top: var(--sp-3)">
+    <summary>{{ t('game.manual_points') }}</summary>
+    <form method="post" action="{{ url_for('matches.adjust_score', match_id=match.id) }}" class="form-grid" style="margin-top: var(--sp-2)">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="game" value="{{ slug }}">
+      <input type="hidden" name="next" value="{{ request.path }}">
+      <select name="team_id" aria-label="{{ t('matches.team') }}">
+        {% for team in match.teams %}<option value="{{ team.id }}">{{ team.name }}</option>{% endfor %}
+      </select>
+      <div class="input-inline">
+        <input type="number" name="points" step="0.5" required placeholder="+/-" aria-label="{{ t('matches.points') }}">
+        <button type="submit" class="btn btn--ghost btn--sm">{{ t('common.apply') }}</button>
+      </div>
+      <input type="text" name="reason" maxlength="200" placeholder="{{ t('matches.reason_placeholder') }}" aria-label="{{ t('matches.reason') }}">
+    </form>
+  </details>
+</div>

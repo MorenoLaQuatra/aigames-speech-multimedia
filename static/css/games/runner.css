@@ -1,0 +1,95 @@
+/* Game 4 - runner. Colours only through the shared tokens (style.css).
+ * The canvas reads the same tokens via getComputedStyle (game.js). */
+
+.runner-status {
+  padding: var(--sp-3) var(--sp-4); border: 1px solid var(--accent); border-radius: var(--radius);
+  background: var(--accent-soft); margin-bottom: var(--sp-4); font-weight: 600;
+}
+.runner-status--error { border-color: var(--danger); background: var(--danger-soft); color: var(--danger); }
+
+.runner-commands { margin-bottom: var(--sp-4); }
+.runner-cmd { display: flex; flex-direction: column; gap: var(--sp-2); }
+.runner-cmd__head { display: flex; align-items: center; gap: var(--sp-3); }
+.runner-cmd__title h3 { margin: 0; }
+.runner-cmd__icon {
+  width: 56px; height: 56px; border-radius: var(--radius); display: inline-flex; align-items: center; justify-content: center;
+  background: var(--brand-dark); color: var(--bg); font-size: 1.6rem; flex: 0 0 auto;
+}
+[data-theme="dark"] .runner-cmd__icon { background: var(--accent); color: var(--accent-text); }
+.runner-cmd[data-command="background"] .runner-cmd__icon { background: var(--surface-2); color: var(--text-muted); }
+.runner-cmd--done { border-color: var(--success); }
+.runner-cmd--active { border-color: var(--highlight); background: var(--highlight-soft); }
+.runner-cmd__live { font-size: 1.2rem; font-weight: 800; color: var(--danger); }
+/* Push-to-talk: no text selection / touch callout while held. */
+.runner-ptt { user-select: none; -webkit-user-select: none; touch-action: none; -webkit-touch-callout: none; }
+.btn.runner-ptt--held, .btn.runner-ptt--held:hover { background: var(--danger); border-color: var(--danger); color: var(--danger-text); }
+
+.runner-progress { height: 8px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; }
+.runner-progress__fill { height: 100%; width: 0; background: var(--accent); }
+.runner-cmd--done .runner-progress__fill { background: var(--success); }
+
+.runner-train { display: flex; flex-direction: column; gap: var(--sp-3); }
+.runner-train__status { font-weight: 700; }
+
+.runner-bars { display: flex; flex-direction: column; gap: var(--sp-2); }
+.runner-bar { display: grid; grid-template-columns: 28px minmax(0, 1fr) 4ch; gap: var(--sp-2); align-items: center; font-weight: 700; }
+.runner-bar__track { height: 22px; border-radius: var(--radius); background: var(--surface-2); overflow: hidden; border: 1px solid var(--border); }
+.runner-bar__fill { height: 100%; width: 0; background: var(--border); }
+.runner-bar--over .runner-bar__fill { background: var(--accent); }
+.runner-bar--fired .runner-bar__fill { background: var(--highlight); }
+.runner-bar__value { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-muted); font-size: 0.85rem; }
+
+.runner-play { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: var(--sp-4); align-items: start; }
+@media (max-width: 960px) { .runner-play { grid-template-columns: minmax(0, 1fr); } }
+.runner-stage { position: relative; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
+/* Height-driven so the whole track (runner included) fits on screen; width follows the 600x760 ratio. */
+.runner-stage canvas { display: block; height: min(60vh, 760px); width: auto; max-width: 100%; aspect-ratio: 600 / 760; margin: 0 auto; }
+.runner-hud {
+  display: flex; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--border); background: var(--bg); font-size: 1.1rem;
+}
+.runner-hud strong { font-size: 1.4rem; font-variant-numeric: tabular-nums; margin-left: var(--sp-1); }
+.runner-overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-3);
+  background: var(--bg); text-align: center; padding: var(--sp-5); font-size: 2.2rem; font-weight: 800; color: var(--brand-dark);
+}
+.runner-overlay small { font-size: 1.1rem; font-weight: 600; color: var(--text-muted); }
+.runner-overlay .result-banner { font-size: 2rem; }
+
+.runner-side { display: flex; flex-direction: column; gap: var(--sp-3); }
+.runner-last { font-size: 2.6rem; font-weight: 800; line-height: 1.1; color: var(--brand-dark); display: flex; align-items: center; gap: var(--sp-3); min-height: 3rem; }
+.runner-last i { color: var(--accent); }
+
+.runner-verdict { font-size: 1.3rem; font-weight: 700; margin-top: var(--sp-4); }
+.runner-bars:empty::before { content: attr(data-empty); color: var(--text-muted); font-size: 0.85rem; }
+
+/* "How to play" legend: the same STOP sign and coin as on the canvas. */
+.runner-legend { display: flex; flex-direction: column; gap: var(--sp-3); }
+.runner-legend__row { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: var(--sp-3); align-items: center; font-size: 0.95rem; }
+.runner-legend__row strong { display: block; }
+.runner-legend__stop {
+  width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--danger); color: var(--danger-text); font-weight: 800; font-size: 0.7rem; letter-spacing: 0.02em;
+  clip-path: polygon(29% 0, 71% 0, 100% 29%, 100% 71%, 71% 100%, 29% 100%, 0 71%, 0 29%);
+}
+.runner-legend__coin {
+  width: 40px; height: 40px; margin: 2px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--highlight); color: var(--highlight-text); border: 3px solid var(--highlight-text); font-weight: 800; font-size: 0.75rem;
+}
+.runner-legend__icon { width: 44px; text-align: center; font-size: 1.5rem; color: var(--accent); }
+
+/* Recorded examples: one chip per recording, x deletes it. */
+.runner-examples { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.runner-examples:empty { display: none; }
+.runner-example {
+  display: inline-flex; align-items: center; gap: var(--sp-2); padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-2);
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg);
+}
+.runner-example__num { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text-muted); min-width: 1ch; }
+.runner-example__spec { height: 32px; width: auto; image-rendering: pixelated; background: var(--surface); border-radius: 3px; }
+.runner-example__remove {
+  border: 0; background: transparent; color: var(--text-muted); cursor: pointer; width: 28px; height: 28px; border-radius: var(--radius);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.runner-example__remove:hover:not(:disabled) { background: var(--danger-soft); color: var(--danger); }
+.runner-example__remove:disabled { opacity: 0.4; cursor: default; }
