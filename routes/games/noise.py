@@ -1,6 +1,9 @@
-"""Game 1 - "Imita il suono": a team imitates a sound with their voice, an
+"""Game 1 - "Sound Challenge": a team imitates a sound with their voice, an
 AudioSet classifier (workers/audio_classifier.py) listens, and the team
 scores if the target sound is among its top predictions.
+
+Sounds are grouped in categories (animals / human sounds / other) of similar
+difficulty: the team picks a category and gets a random sound from it.
 
 Scoring (config.games.noise.points_by_rank): the best rank of any of the
 target's AudioSet labels decides the points. A team scores each target at
@@ -15,10 +18,11 @@ import requests
 from flask import Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
+from content.audioset_it import AUDIOSET_IT
 from content.noise import AUDIOSET_LABELS, unknown_labels
 from extensions import db
-from i18n import localized, t
-from models import NoiseTarget, ScoreEvent, Team
+from i18n import get_locale, localized, t
+from models import NOISE_CATEGORIES, NoiseTarget, ScoreEvent, Team
 from services.context import admin_required, get_current_match, require_current_match
 from services.model_manager import WorkerUnavailable
 from services.scoring import add_score
@@ -33,6 +37,7 @@ def _target_dict(target):
         "id": target.id,
         "name": localized(target, "name"),
         "emoji": target.emoji,
+        "category": target.category,
         "labels": target.label_list,
     }
 
@@ -47,6 +52,7 @@ def play(match):
     page_config = {
         "nextUrl": url_for("noise.api_next"),
         "attemptUrl": url_for("noise.api_attempt"),
+        "categories": {category: t(f"noise.category_{category}") for category in NOISE_CATEGORIES},
         "recordSeconds": cfg.record_seconds,
         "countdownSeconds": cfg.countdown_seconds,
         "topK": cfg.top_k_shown,
@@ -81,20 +87,29 @@ def _used_target_ids(match, team):
 @noise_bp.route("/api/next")
 @login_required
 def api_next():
-    """A random active target this team hasn't tried yet in this match
-    (falls back to any active target once they have tried them all)."""
+    """A random active target of the chosen category that this team hasn't
+    tried yet in this match (falls back to any of that category once they
+    have tried them all)."""
     match = get_current_match()
     if match is None:
         abort(404)
     team = _team_in_match(match, request.args.get("team_id", type=int))
+    category = request.args.get("category", "")
+    if category not in NOISE_CATEGORIES:
+        abort(400)
     current_id = request.args.get("current_id", type=int)
-    targets = NoiseTarget.query.filter_by(active=True).all()
+    targets = NoiseTarget.query.filter_by(active=True, category=category).all()
     if not targets:
-        return jsonify({"error": t("noise.no_targets")}), 409
+        return jsonify({"error": t("noise.no_targets_category")}), 409
     used = _used_target_ids(match, team)
     fresh = [tg for tg in targets if tg.id not in used and tg.id != current_id]
     pool = fresh or [tg for tg in targets if tg.id != current_id] or targets
     return jsonify(_target_dict(random.choice(pool)))
+
+
+def _label_name(label):
+    """AudioSet label as shown to the class: Italian when the UI is Italian."""
+    return AUDIOSET_IT.get(label, label) if get_locale() == "it" else label
 
 
 def _best_rank(predictions, labels, max_rank):
@@ -131,12 +146,14 @@ def api_attempt():
         return jsonify({"error": str(exc)}), status
     result = response.json()
     predictions = result["predictions"]
+    for prediction in predictions:
+        prediction["name"] = _label_name(prediction["label"])
 
     points_by_rank = current_app.games_config.games.noise.points_by_rank
     rank = _best_rank(predictions, target.label_list, len(points_by_rank))
     points = points_by_rank[rank - 1] if rank else 0
     name = localized(target, "name")
-    top_label = predictions[0]["label"]
+    top_label = predictions[0]["name"]
     detail = {"target_id": target.id, "target": target.name_en, "rank": rank,
               "top": [p["label"] for p in predictions[:5]]}
 
@@ -171,6 +188,7 @@ def _form_values():
         "name_it": request.form.get("name_it", "").strip()[:80],
         "name_en": request.form.get("name_en", "").strip()[:80],
         "emoji": request.form.get("emoji", "").strip()[:16],
+        "category": request.form.get("category", ""),
         "labels": labels,
     }
 
@@ -178,6 +196,8 @@ def _form_values():
 def _validate(values):
     """Returns an error message or None."""
     if not values["name_it"] or not values["name_en"] or not values["labels"]:
+        return t("noise.content_required")
+    if values["category"] not in NOISE_CATEGORIES:
         return t("noise.content_required")
     bad = unknown_labels(values["labels"])
     if bad:
@@ -187,7 +207,9 @@ def _validate(values):
 
 def _content_page(form_target=None, form_values=None):
     targets = NoiseTarget.query.order_by(NoiseTarget.active.desc(), NoiseTarget.name_it.asc()).all()
-    return render_template("games/noise_content.html", targets=targets, form_target=form_target,
+    by_category = {category: [tg for tg in targets if tg.category == category] for category in NOISE_CATEGORIES}
+    return render_template("games/noise_content.html", targets=targets, by_category=by_category,
+                           categories=NOISE_CATEGORIES, form_target=form_target,
                            form_values=form_values, audioset_labels=AUDIOSET_LABELS)
 
 
@@ -219,6 +241,7 @@ def content_save():
     target.name_it = values["name_it"]
     target.name_en = values["name_en"]
     target.emoji = values["emoji"]
+    target.category = values["category"]
     target.labels = "\n".join(values["labels"])
     db.session.commit()
     flash(t("common.saved"), "success")

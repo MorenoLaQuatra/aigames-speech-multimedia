@@ -9,10 +9,10 @@ toggle in the header.
 
 | # | Game | What the AI does | Where the model runs |
 |---|------|------------------|----------------------|
-| 1 | **Imita il suono** | Audio classifier (AudioSet) recognises imitated noises | `workers/audio_classifier.py` |
-| 2 | **Di chi è la voce?** | Clones volunteers' voices; teams guess who's speaking | `workers/voice_clone.py` |
-| 3 | **Visual Taboo AI** | Text-to-image from a description without forbidden words; a detector checks which elements appear | `workers/image_gen.py` |
-| 4 | **Comanda con la voce** | A small network learns each team's 3 command words (recorded push-to-talk) in the browser and drives a runner game | in the browser (TensorFlow.js) |
+| 1 | **Sound Challenge** | Audio classifier (AudioSet) recognises imitated noises | `workers/audio_classifier.py` |
+| 2 | **Voice Match** | Clones volunteers' voices; teams guess who's speaking | `workers/voice_clone.py` |
+| 3 | **Visual Taboo** | Text-to-image from a description without forbidden words; a detector checks which elements appear | `workers/image_gen.py` |
+| 4 | **Sound Gaming** | A small network learns each team's 3 command words (recorded push-to-talk) in the browser and drives a runner game | in the browser (TensorFlow.js) |
 
 ## One thing to launch
 
@@ -32,13 +32,20 @@ journalctl -u ai-games -f         # log
 That's it. The webapp starts each **model worker** as a child process the
 first time a game page needs it, and stops it again when:
 - it has been idle for `models.idle_minutes`, or
-- another worker starts and `models.exclusive: true` (only one model family
-  holds the GPU at a time), or
+- another worker starts and `models.exclusive: true`, unless both workers
+  have `share_gpu: true` (audio classifier + voice cloning can run together;
+  image generation runs alone), or
 - an admin stops it from **Amministrazione > Modelli**, or
 - the webapp exits (children die with it, even on `kill -9`).
 
 Game pages show a "model ready / starting" badge; opening a game a minute
 before you need it hides the loading time. Worker logs: `logs/worker-<name>.log`.
+
+**Two games at once on two PCs** (e.g. Sound Challenge while volunteers record
+for Voice Match): log in on both PCs (the same account is fine), pick the same
+match on each, open one game per PC. Points from both go to the same match.
+Sound Challenge and Voice Match share the GPU; Visual Taboo needs it alone, so
+pair it with Sound Gaming (runs in the browser) instead.
 
 **CPU vs GPU**: each worker's device is `models.workers.<name>.device` in
 `configs/app.yaml` (`cuda` on the Quadro RTX 5000, 16 GB; set `cpu` if the

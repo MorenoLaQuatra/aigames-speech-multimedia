@@ -1,4 +1,4 @@
-"""Strings for game 2 - "Di chi è la voce?" (voices). Keys prefixed voices.js_
+"""Strings for game 2 - "Voice Match" (voices). Keys prefixed voices.js_
 are passed to static/js/voices.js through the page config."""
 
 STRINGS = {
@@ -12,9 +12,9 @@ STRINGS = {
         "voices.js_consent_badge": "Consenso",
         "voices.err_consent_required": "Prima di registrare conferma il consenso del volontario.",
         "voices.reading_title": "Testo da leggere ad alta voce",
-        "voices.reading_hint": "Leggete con calma e con la vostra voce normale, vicino al microfono, in un ambiente silenzioso. Bastano {n} secondi.",
-        "voices.reading_text_it": "Il vecchio pescatore guardava il mare d'inverno: gli zaini gialli dei bambini, le scarpe bagnate e un gatto grigio che dormiva sulla sedia. «Chissà se domani farà bel tempo», pensò, mentre la radio suonava una canzone allegra e lontana.",
-        "voices.reading_text_en": "The old fisherman watched the winter sea: the children's yellow backpacks, the wet shoes and a grey cat sleeping on the chair. \"I wonder if the weather will be nice tomorrow,\" he thought, while the radio played a cheerful, distant song.",
+        "voices.reading_hint": "Leggete con calma, con la vostra voce normale, vicino al microfono. Avete {n} secondi: se finite prima, va bene lo stesso.",
+        "voices.reading_text_it": "Oggi all'Università Kore di Enna sto scoprendo cosa sa fare l'intelligenza artificiale. Non immaginavo che a un computer bastassero pochi secondi della mia voce per imitarla.",
+        "voices.reading_text_en": "Today at Kore University of Enna I'm finding out what artificial intelligence can do. I never imagined a computer would need just a few seconds of my voice to imitate it.",
         "voices.add_volunteer": "Aggiungi",
         "voices.nickname_placeholder": "Nome del volontario",
         "voices.generate_title": "Prepara le voci clonate",
@@ -97,9 +97,9 @@ STRINGS = {
         "voices.js_consent_badge": "Consent",
         "voices.err_consent_required": "Confirm the volunteer's consent before recording.",
         "voices.reading_title": "Text to read aloud",
-        "voices.reading_hint": "Read calmly in your normal voice, close to the microphone, somewhere quiet. {n} seconds are enough.",
-        "voices.reading_text_it": "Il vecchio pescatore guardava il mare d'inverno: gli zaini gialli dei bambini, le scarpe bagnate e un gatto grigio che dormiva sulla sedia. «Chissà se domani farà bel tempo», pensò, mentre la radio suonava una canzone allegra e lontana.",
-        "voices.reading_text_en": "The old fisherman watched the winter sea: the children's yellow backpacks, the wet shoes and a grey cat sleeping on the chair. \"I wonder if the weather will be nice tomorrow,\" he thought, while the radio played a cheerful, distant song.",
+        "voices.reading_hint": "Read calmly in your normal voice, close to the microphone. You have {n} seconds: finishing early is fine.",
+        "voices.reading_text_it": "Oggi all'Università Kore di Enna sto scoprendo cosa sa fare l'intelligenza artificiale. Non immaginavo che a un computer bastassero pochi secondi della mia voce per imitarla.",
+        "voices.reading_text_en": "Today at Kore University of Enna I'm finding out what artificial intelligence can do. I never imagined a computer would need just a few seconds of my voice to imitate it.",
         "voices.add_volunteer": "Add",
         "voices.nickname_placeholder": "Volunteer's name",
         "voices.generate_title": "Prepare the cloned voices",

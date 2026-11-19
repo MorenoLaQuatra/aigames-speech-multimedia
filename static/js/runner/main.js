@@ -12,6 +12,7 @@
 
   const { SoundTrainer, CommandDetector, BACKGROUND } = window.RunnerTrainer;
   const ICONS = { left: "fa-arrow-left", right: "fa-arrow-right", jump: "fa-arrow-up" };
+  const TRAIN_ANIM_MIN_MS = 3000; // the training animation stays up at least this long
 
   document.addEventListener("DOMContentLoaded", () => {
     const cfg = GameKit.config();
@@ -28,6 +29,8 @@
     const trainBtn = $("#train-btn");
     const trainStatus = $("#train-status");
     const trainProgress = $("#train-progress");
+    const trainAnim = $("#train-anim");
+    const trainAnimStatus = $("#train-anim-status");
     const testBtn = $("#test-btn");
     const testBars = $("#test-bars");
     const playBars = $("#play-bars");
@@ -298,14 +301,28 @@
       showStatus("");
       setBusy(true);
       trainStatus.textContent = s.training;
-      const acc = await trainer.train((epoch, logs) => {
-        trainProgress.style.width = `${(100 * epoch) / settings.trainingEpochs}%`;
-        trainStatus.textContent = fmt(s.epoch_progress, {
-          epoch, total: settings.trainingEpochs, acc: Math.round(100 * logs.acc),
+      trainAnimStatus.textContent = s.training;
+      trainAnim.classList.remove("hidden");
+      const shownAt = performance.now();
+      try {
+        // Let the browser draw the animation before the work starts.
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        const acc = await trainer.train((epoch, logs) => {
+          trainProgress.style.width = `${(100 * epoch) / settings.trainingEpochs}%`;
+          trainStatus.textContent = fmt(s.epoch_progress, {
+            epoch, total: settings.trainingEpochs, acc: Math.round(100 * logs.acc),
+          });
+          trainAnimStatus.textContent = trainStatus.textContent;
         });
-      });
-      trainStatus.textContent = fmt(s.trained, { acc: Math.round(100 * acc) });
-      setBusy(false);
+        trainStatus.textContent = fmt(s.trained, { acc: Math.round(100 * acc) });
+        // Training is often faster than a blink: keep the animation up long
+        // enough for the class to see it.
+        const left = TRAIN_ANIM_MIN_MS - (performance.now() - shownAt);
+        if (left > 0) await new Promise((resolve) => setTimeout(resolve, left));
+      } finally {
+        trainAnim.classList.add("hidden");
+        setBusy(false);
+      }
     });
 
     /* --------------------------------------------------- probability bars */

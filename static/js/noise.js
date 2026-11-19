@@ -1,6 +1,7 @@
-/* Game 1 - "Imita il suono".
+/* Game 1 - "Sound Challenge".
  *
- * Steps: idle -> target (draw a sound, countdown, record) -> result.
+ * Steps: idle -> target (draw a sound of the chosen category, countdown,
+ * record) -> result.
  * Recording uses WavRecorder (full-quality float WAV); the server forwards
  * it to the classifier, scores the attempt, and returns the predictions.
  */
@@ -18,9 +19,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const recordHint = document.getElementById("record-hint");
   const countdownEl = document.getElementById("countdown");
   const levelEl = document.getElementById("level");
-  const playbackBtn = document.getElementById("playback-btn");
+  const playback = document.getElementById("playback");
 
   let target = null;
+  let category = null;
   let busy = false;
   let lastUrl = null;
   let recorder = null;
@@ -38,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function drawTarget() {
     const team = kit.picker.current();
-    const params = new URLSearchParams({ team_id: team.id });
+    const params = new URLSearchParams({ team_id: team.id, category });
     if (target) params.set("current_id", target.id);
     try {
       target = await GameKit.api(`${cfg.nextUrl}?${params}`);
@@ -48,6 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     document.getElementById("target-emoji").textContent = target.emoji;
     document.getElementById("target-name").textContent = target.name;
+    document.getElementById("target-category").textContent = cfg.categories[target.category];
     showStep("target");
     updateRecordButton();
   }
@@ -96,6 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
       recordBtn.dataset.recording = "false";
       if (lastUrl) URL.revokeObjectURL(lastUrl);
       lastUrl = URL.createObjectURL(blob);
+      playback.src = lastUrl;
       recordHint.textContent = s.thinking;
       await submit(blob);
     } catch (err) {
@@ -146,24 +150,26 @@ document.addEventListener("DOMContentLoaded", () => {
         <span class="pred__value"></span>`;
       row.querySelector(".pred__rank").textContent = i + 1;
       row.querySelector(".pred__fill").style.width = `${(p.score / maxScore) * 100}%`;
-      row.querySelector(".pred__label").textContent = p.label;
+      row.querySelector(".pred__label").textContent = p.name;
       row.querySelector(".pred__value").textContent = `${Math.round(p.score * 100)}%`;
       return row;
     }));
     showStep("result");
   }
 
-  document.querySelectorAll('[data-action="next"]').forEach((btn) => btn.addEventListener("click", () => {
-    if (!busy) drawTarget();
+  document.querySelectorAll("[data-category]").forEach((btn) => btn.addEventListener("click", () => {
+    if (busy) return;
+    category = btn.dataset.category;
+    drawTarget();
   }));
+  document.querySelector('[data-action="skip"]').addEventListener("click", () => {
+    if (!busy) drawTarget();
+  });
   document.querySelector('[data-action="retry"]').addEventListener("click", () => {
     showStep("target");
     updateRecordButton();
   });
   recordBtn.addEventListener("click", record);
-  playbackBtn.addEventListener("click", () => {
-    if (lastUrl) new Audio(lastUrl).play();
-  });
   // A new team starts from a fresh draw.
   kit.picker.onChange(() => {
     if (busy) return;

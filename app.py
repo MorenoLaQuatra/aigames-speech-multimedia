@@ -66,6 +66,7 @@ def create_app(config, config_path):
 
     with app.app_context():
         db.create_all()
+        _upgrade_schema(app)
 
     app.models = ModelManager(config, APP_ROOT, config_path)
     atexit.register(app.models.stop_all)
@@ -192,6 +193,21 @@ def _register_error_handlers(app):
             return jsonify({"error": t("errors.api_server_error")}), 500
         return render_template("errors/error.html", code=500, heading=t("errors.500_heading"),
                                body=t("errors.500_body")), 500
+
+
+def _upgrade_schema(app):
+    """Columns added after the first deploy (create_all only creates missing
+    tables). Each step is idempotent."""
+    from sqlalchemy import inspect, text
+
+    columns = {column["name"] for column in inspect(db.engine).get_columns("noise_targets")}
+    if "category" not in columns:
+        from content.noise import backfill_categories
+
+        db.session.execute(text("ALTER TABLE noise_targets ADD COLUMN category VARCHAR(20) NOT NULL DEFAULT 'other'"))
+        db.session.commit()
+        app.logger.info("Schema upgrade: noise_targets.category added, %d default sounds categorised",
+                        backfill_categories())
 
 
 def _check_password(password):

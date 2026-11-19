@@ -1,4 +1,4 @@
-/* Drawing game (Visual Taboo AI).
+/* Drawing game (Visual Taboo).
  *
  * Flow: pick a scene -> the team types a description (forbidden words are
  * highlighted live; the server re-checks and is authoritative) -> "Draw it!"
@@ -220,7 +220,9 @@
     ctx.lineWidth = 3 * k;
     ctx.font = `bold ${Math.round(16 * k)}px sans-serif`;
     selected.elements.forEach((e, i) => {
-      if (!e.box || !(e.found || checked.has(i))) return;
+      // A box is shown only while its element is ticked (found or not):
+      // unticking hides it, ticking a low-confidence one shows it dashed.
+      if (!e.box || !checked.has(i)) return;
       const [x0, y0, x1, y1] = e.box;
       const color = boxColor(i);
       ctx.strokeStyle = color;

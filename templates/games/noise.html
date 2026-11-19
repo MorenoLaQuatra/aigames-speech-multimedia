@@ -3,6 +3,16 @@
 {% block main_class %}app-main--wide{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/games/noise.css') }}">{% endblock %}
 {% block content %}
+{% set cat_icons = {"animals": "fa-paw", "human": "fa-person", "other": "fa-car-side"} %}
+{% macro category_buttons(primary) %}
+<div class="noise-cats">
+  {% for category, label in page_config.categories.items() %}
+  <button type="button" class="btn {{ 'btn--xl btn--highlight' if primary else 'btn--lg btn--ghost' }} noise-cat" data-category="{{ category }}">
+    <i class="fa-solid {{ cat_icons[category] }}"></i>{{ label }}
+  </button>
+  {% endfor %}
+</div>
+{% endmacro %}
 <script type="application/json" id="page-config">{{ page_config | tojson }}</script>
 
 {% with slug='noise', worker='audio_classifier' %}{% include "partials/game_bar.html" %}{% endwith %}
@@ -15,7 +25,8 @@
       <div class="noise-step" data-step="idle">
         <div class="stage__emoji">🎤</div>
         <p class="stage__hint">{{ t('noise.rules', seconds=page_config.recordSeconds) }}</p>
-        <button type="button" class="btn btn--xl btn--highlight" data-action="next"><i class="fa-solid fa-shuffle"></i>{{ t('noise.new_sound') }}</button>
+        <p class="noise-cats__title">{{ t('noise.pick_category') }}</p>
+        {{ category_buttons(true) }}
       </div>
 
       {# Target drawn: record #}
@@ -23,7 +34,7 @@
         <div class="noise-target">
           <div class="stage__emoji" id="target-emoji"></div>
           <div>
-            <div class="caption noise-target__kicker">{{ t('noise.imitate') }}</div>
+            <div class="caption noise-target__kicker">{{ t('noise.imitate') }} · <span id="target-category"></span></div>
             <div class="stage__big" id="target-name"></div>
           </div>
         </div>
@@ -33,7 +44,7 @@
         </button>
         <div class="level-meter" aria-hidden="true"><div class="level-meter__fill" id="level"></div></div>
         <div class="stage__hint" id="record-hint">{{ t('noise.press_record') }}</div>
-        <button type="button" class="btn btn--ghost btn--sm" data-action="next"><i class="fa-solid fa-forward"></i>{{ t('noise.skip') }}</button>
+        <button type="button" class="btn btn--ghost btn--sm" data-action="skip"><i class="fa-solid fa-forward"></i>{{ t('noise.skip') }}</button>
       </div>
 
       {# Result #}
@@ -44,11 +55,15 @@
         </div>
         <div class="caption">{{ t('noise.ai_heard') }}</div>
         <div class="pred-list" id="pred-list"></div>
-        <div class="row" style="justify-content:center">
-          <button type="button" class="btn btn--ghost" id="playback-btn"><i class="fa-solid fa-play"></i>{{ t('noise.playback') }}</button>
-          <button type="button" class="btn btn--ghost" data-action="retry"><i class="fa-solid fa-rotate-right"></i>{{ t('noise.retry') }}</button>
-          <button type="button" class="btn btn--lg btn--highlight" data-action="next"><i class="fa-solid fa-shuffle"></i>{{ t('noise.next_sound') }}</button>
+        <div class="noise-playback">
+          <span class="caption">{{ t('noise.playback') }}</span>
+          <audio id="playback" controls preload="auto"></audio>
         </div>
+        <div class="row" style="justify-content:center">
+          <button type="button" class="btn btn--ghost" data-action="retry"><i class="fa-solid fa-rotate-right"></i>{{ t('noise.retry') }}</button>
+        </div>
+        <p class="noise-cats__title">{{ t('noise.next_sound') }}</p>
+        {{ category_buttons(false) }}
       </div>
     </div>
     <p class="caption" style="margin-top: var(--sp-3)">

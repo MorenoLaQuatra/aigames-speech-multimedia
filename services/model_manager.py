@@ -3,8 +3,9 @@
 The webapp is the only thing you launch. Each model family (audio
 classifier, voice cloning, image generation) runs in its own child process
 (workers/*.py), started the first time a game needs it and stopped again
-when idle - or, with `models.exclusive`, when another worker starts - so GPU
-memory is only held while a game is actually using it.
+when idle - or, with `models.exclusive`, when another worker starts (unless
+both have `share_gpu`, so two small models can serve two games played at the
+same time) - so GPU memory is only held while a game is actually using it.
 
 Why child processes rather than loading models inside the webapp:
 - stopping a process is the only reliable way to give all GPU memory back;
@@ -157,6 +158,8 @@ class ModelManager:
             if self.config.models.exclusive:
                 for other in self.workers.values():
                     if other is worker or other.process is None:
+                        continue
+                    if worker.cfg.share_gpu and other.cfg.share_gpu:
                         continue
                     if other.busy:
                         # Killing it would lose work in progress (e.g. clips

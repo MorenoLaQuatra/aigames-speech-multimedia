@@ -1,4 +1,4 @@
-"""Strings for the drawing game (Visual Taboo AI)."""
+"""Strings for the drawing game (Visual Taboo)."""
 
 STRINGS = {
     "it": {

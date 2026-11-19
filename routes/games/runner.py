@@ -1,4 +1,4 @@
-"""Game 4 - "Comanda con la voce" (runner).
+"""Game 4 - "Sound Gaming" (runner).
 
 Each team picks three command words (left / right / jump), records a few
 push-to-talk examples of each plus the room noise, and a small classifier is trained on top of
@@ -54,9 +54,10 @@ def _settings():
     }
 
 
+
 def _strings():
     keys = [
-        "cmd_left", "cmd_right", "cmd_jump", "cmd_background",
+        "cmd_left", "cmd_right", "cmd_jump", "cmd_background", "learning",
         "say_word", "stay_silent", "examples_count", "background_done", "background_todo", "redo",
         "hold_to_talk", "release_to_save", "recording_word", "saving_example", "remove_example",
         "train", "training", "epoch_progress", "trained", "train_first", "need_examples",

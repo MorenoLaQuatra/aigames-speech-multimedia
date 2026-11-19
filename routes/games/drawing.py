@@ -1,4 +1,4 @@
-"""Game 3 - Visual Taboo AI (drawing).
+"""Game 3 - Visual Taboo (drawing).
 
 A team gets a scene and a list of elements to make appear, and describes
 the scene without the forbidden words. The image worker translates the

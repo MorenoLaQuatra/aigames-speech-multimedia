@@ -132,6 +132,26 @@
     <p class="footnote">{{ t('runner.footnote') }}</p>
   </div>
 
+  {# Training animation: a small network with signals flowing through it, shown in the
+     middle of the screen while the AI trains (static/js/runner/main.js). #}
+  <div class="train-anim hidden" id="train-anim" role="status" aria-live="polite">
+    <div class="train-anim__card">
+      {% set xs = [50, 160, 270] %}
+      {% set ys = [[60, 120, 180], [30, 90, 150, 210], [60, 120, 180]] %}
+      <svg class="train-anim__net" viewBox="0 0 320 240" aria-hidden="true">
+        {% for li in range(2) %}{% for a in ys[li] %}{% for b in ys[li + 1] %}
+        <line class="ta-edge" x1="{{ xs[li] }}" y1="{{ a }}" x2="{{ xs[li + 1] }}" y2="{{ b }}"/>
+        <line class="ta-flow ta-flow--{{ li }}" x1="{{ xs[li] }}" y1="{{ a }}" x2="{{ xs[li + 1] }}" y2="{{ b }}" pathLength="100"/>
+        {% endfor %}{% endfor %}{% endfor %}
+        {% for li in range(3) %}{% for y in ys[li] %}
+        <circle class="ta-node ta-node--{{ li }}" cx="{{ xs[li] }}" cy="{{ y }}" r="13"/>
+        {% endfor %}{% endfor %}
+      </svg>
+      <p class="train-anim__title">{{ t('runner.learning') }}</p>
+      <p class="train-anim__status" id="train-anim-status"></p>
+    </div>
+  </div>
+
   <aside>
     {% with slug='runner' %}{% include "partials/mini_board.html" %}{% endwith %}
   </aside>

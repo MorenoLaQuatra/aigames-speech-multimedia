@@ -1,4 +1,4 @@
-/* Game 2 - "Di chi è la voce?"
+/* Game 2 - "Voice Match"
  *
  * Two panels driven by one server state (GET api/state):
  *  - setup: volunteers per team, reference recording (WavRecorder, full

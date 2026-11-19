@@ -38,6 +38,12 @@
   // frames of the recording; this much context is kept around the voice.
   const VOICE_ABOVE_FLOOR_DB = 8;
   const TRIM_PAD_SECONDS = 0.15;
+  // Training: window hop as a fraction of the 1 s window, and batch size
+  // (both the library's transfer.train() defaults).
+  const WINDOW_HOP_RATIO = 0.25;
+  const BATCH_SIZE = 32;
+  // Windows run through the base model per step before yielding to the page.
+  const EMBED_CHUNK = 4;
 
   let transferCounter = 0;
 
@@ -269,23 +275,65 @@
       return Math.max(0, this.capture.frames.length * this.capture.frameSeconds - PRE_ROLL_SECONDS);
     }
 
-    /* Returns the final training accuracy (0..1). */
+    /* Trains the new head; returns the final training accuracy (0..1).
+     *
+     * Same result as the library's transfer.train() - the head is one dense
+     * layer on the base model's second-last dense layer, which is frozen -
+     * but much faster: the library runs every example through the whole
+     * convolutional base again at every epoch, freezing the page for seconds
+     * on the first epochs. Here the base runs ONCE (its output never changes)
+     * and the epochs train only the head on those embeddings. The head's
+     * layer is shared with transfer.model, so listen() uses the new weights. */
     async train(onEpoch) {
-      let lastAcc = 0;
-      await this.transfer.train({
-        epochs: this.settings.trainingEpochs,
-        // Long examples are cut into overlapping 1 s windows; mixing room
-        // noise into copies of the examples helps with only a few of them.
+      const transfer = this.transfer;
+      if (!transfer.model) transfer.createTransferModelFromBaseModel();
+      // Long examples cut into overlapping 1 s windows (the library's
+      // default hop); mixing room noise into copies of the examples helps
+      // with only a few of them.
+      const { xs, ys } = transfer.collectTransferDataAsTensors(WINDOW_HOP_RATIO, {
         augmentByMixingNoiseRatio: this.settings.augmentNoiseRatio,
-        callback: {
-          onEpochEnd: async (epoch, logs) => {
-            lastAcc = logs.acc;
-            onEpoch(epoch + 1, logs);
-          },
-        },
       });
+      const embeddings = await this.embed(xs);
+      xs.dispose();
+      let lastAcc = 0;
+      try {
+        transfer.transferHead.compile({ loss: "categoricalCrossentropy", optimizer: "sgd", metrics: ["acc"] });
+        await transfer.transferHead.fit(embeddings, ys, {
+          epochs: this.settings.trainingEpochs,
+          batchSize: BATCH_SIZE,
+          shuffle: true,
+          callbacks: {
+            onEpochEnd: async (epoch, logs) => {
+              lastAcc = logs.acc;
+              onEpoch(epoch + 1, logs);
+            },
+          },
+        });
+      } finally {
+        embeddings.dispose();
+        ys.dispose();
+      }
       this.trained = true;
       return lastAcc;
+    }
+
+    /* Base model output (second-last dense layer) for every window, computed
+     * a few windows at a time with a pause in between, so the page (and the
+     * training animation) never freezes for long. */
+    async embed(xs) {
+      const transfer = this.transfer;
+      const embedder = tf.model({ inputs: transfer.baseModel.inputs, outputs: transfer.secondLastBaseDenseLayer.output });
+      const parts = [];
+      for (let start = 0; start < xs.shape[0]; start += EMBED_CHUNK) {
+        const size = Math.min(EMBED_CHUNK, xs.shape[0] - start);
+        const part = tf.tidy(() => embedder.predict(xs.slice(start, size)));
+        await part.data();
+        await tf.nextFrame(); // let the page draw between chunks
+        parts.push(part);
+      }
+      const embeddings = tf.concat(parts);
+      parts.forEach((part) => part.dispose());
+      return embeddings;
     }
 
     /* Continuous recognition. onScores(labels, scores) on every analysis

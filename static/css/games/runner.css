@@ -1,5 +1,33 @@
-/* Game 4 - runner. Colours only through the shared tokens (style.css).
+/* Game 4 - runner. Colours only through tokens (shared ones in style.css).
  * The canvas reads the same tokens via getComputedStyle (game.js). */
+
+/* Scene of the 3D-look runner (canvas only): sky, jungle, stone path. */
+:root {
+  --runner-sky: #cfe8ee;
+  --runner-hills: #8fbf9a;
+  --runner-ground: #5e9b5f;
+  --runner-ground-alt: #568f57;
+  --runner-path: #d9c6a3;
+  --runner-path-alt: #cfb990;
+  --runner-path-edge: #8a6f4a;
+  --runner-trunk: #6b4a2b;
+  --runner-leaves: #2f7a45;
+  --runner-shadow: rgba(0, 0, 0, 0.22);
+  --runner-skin: #e8b48a;
+}
+[data-theme="dark"] {
+  --runner-sky: #0f2733;
+  --runner-hills: #1d4a3a;
+  --runner-ground: #1f4d2f;
+  --runner-ground-alt: #1b452a;
+  --runner-path: #6f6250;
+  --runner-path-alt: #665a49;
+  --runner-path-edge: #3d3326;
+  --runner-trunk: #4a3320;
+  --runner-leaves: #1f5a33;
+  --runner-shadow: rgba(0, 0, 0, 0.35);
+  --runner-skin: #d9a47c;
+}
 
 .runner-status {
   padding: var(--sp-3) var(--sp-4); border: 1px solid var(--accent); border-radius: var(--radius);
@@ -93,3 +121,49 @@
 }
 .runner-example__remove:hover:not(:disabled) { background: var(--danger-soft); color: var(--danger); }
 .runner-example__remove:disabled { opacity: 0.4; cursor: default; }
+
+
+/* ------------------------------------------- training animation (centred overlay) */
+.train-anim {
+  position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: var(--sp-4);
+  background: color-mix(in srgb, var(--bg) 75%, transparent); backdrop-filter: blur(4px);
+  animation: ta-fade 0.25s ease both;
+}
+.train-anim__card {
+  width: min(380px, 100%); padding: var(--sp-5) var(--sp-5) var(--sp-4); text-align: center;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.train-anim__net { display: block; width: 100%; height: auto; }
+.train-anim__title { margin: var(--sp-3) 0 0; font-size: 1.25rem; font-weight: 800; color: var(--brand-dark); }
+.train-anim__status { margin: var(--sp-1) 0 0; color: var(--text-muted); font-variant-numeric: tabular-nums; min-height: 1.5em; }
+
+.ta-edge { stroke: var(--border); stroke-width: 1.5; }
+.ta-flow {
+  stroke: var(--accent); stroke-width: 3; stroke-linecap: round; fill: none;
+  stroke-dasharray: 18 100; stroke-dashoffset: 18; opacity: 0;
+  animation: ta-flow 1.8s linear infinite;
+}
+.ta-flow--1 { animation-delay: 0.6s; }
+.ta-node {
+  fill: var(--surface); stroke: var(--accent); stroke-width: 2.5;
+  transform-box: fill-box; transform-origin: center;
+  animation: ta-node 1.8s ease-in-out infinite;
+}
+.ta-node--1 { animation-delay: 0.6s; }
+.ta-node--2 { animation-delay: 1.2s; }
+
+@keyframes ta-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ta-flow {
+  0% { stroke-dashoffset: 18; opacity: 0; }
+  8% { opacity: 1; }
+  33% { stroke-dashoffset: -100; opacity: 1; }
+  34%, 100% { stroke-dashoffset: -100; opacity: 0; }
+}
+@keyframes ta-node {
+  0%, 30%, 100% { fill: var(--surface); transform: scale(1); }
+  12% { fill: var(--accent); transform: scale(1.18); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .train-anim, .ta-flow, .ta-node { animation: none; }
+}

@@ -7,4 +7,9 @@
 .noise-target .stage__big { font-size: 3.5rem; }
 .noise-target__kicker { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; text-align: left; }
 .noise-small-emoji { font-size: 3rem; }
+.noise-emoji-cell { font-size: 1.6rem; }
+.noise-playback { display: flex; flex-direction: column; align-items: center; gap: var(--sp-1); width: 100%; max-width: 420px; }
+.noise-playback audio { width: 100%; }
+.noise-cats { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-3); }
+.noise-cats__title { margin: 0; font-weight: 700; }
 .pred--target .pred__label::after { content: " ★"; color: var(--accent); }

@@ -168,9 +168,16 @@ class GameFinish(db.Model):
 # can be retired without deleting the history that refers to it.
 # --------------------------------------------------------------------------
 
+NOISE_ANIMALS = "animals"
+NOISE_HUMAN = "human"
+NOISE_OTHER = "other"
+NOISE_CATEGORIES = (NOISE_ANIMALS, NOISE_HUMAN, NOISE_OTHER)
+
+
 class NoiseTarget(db.Model):
     """Game 1: a sound to imitate. `labels` lists the AudioSet class names
-    (one per line) that count as recognising it."""
+    (one per line) that count as recognising it. `category` (NOISE_CATEGORIES)
+    groups sounds of similar difficulty: teams draw from one category at a time."""
 
     __tablename__ = "noise_targets"
 
@@ -178,6 +185,7 @@ class NoiseTarget(db.Model):
     name_it = db.Column(db.String(80), nullable=False)
     name_en = db.Column(db.String(80), nullable=False)
     emoji = db.Column(db.String(16), nullable=False, default="")
+    category = db.Column(db.String(20), nullable=False, default=NOISE_OTHER, server_default=NOISE_OTHER)
     labels = db.Column(db.Text, nullable=False)
     active = db.Column(db.Boolean, nullable=False, default=True)
 

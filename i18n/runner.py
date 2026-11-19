@@ -1,4 +1,4 @@
-"""Strings for game 4 - "Comanda con la voce" (runner)."""
+"""Strings for game 4 - "Sound Gaming" (runner)."""
 
 STRINGS = {
     "it": {
@@ -29,6 +29,7 @@ STRINGS = {
         "runner.redo": "Cancella tutti",
         "runner.train": "Allena l'AI",
         "runner.training": "Allenamento...",
+        "runner.learning": "L'AI sta imparando dai vostri esempi",
         "runner.epoch_progress": "Giro {epoch}/{total} · precisione {acc}%",
         "runner.trained": "Fatto! Precisione sugli esempi: {acc}%",
         "runner.train_first": "Prima allenate l'AI (passo 1).",
@@ -134,6 +135,7 @@ STRINGS = {
         "runner.redo": "Clear all",
         "runner.train": "Train the AI",
         "runner.training": "Training...",
+        "runner.learning": "The AI is learning from your examples",
         "runner.epoch_progress": "Round {epoch}/{total} · accuracy {acc}%",
         "runner.trained": "Done! Accuracy on the examples: {acc}%",
         "runner.train_first": "Train the AI first (step 1).",

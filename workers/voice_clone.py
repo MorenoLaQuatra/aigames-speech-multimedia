@@ -32,7 +32,7 @@ import soundfile as sf  # noqa: E402
 from chatterbox.mtl_tts import ChatterboxMultilingualTTS  # noqa: E402
 from flask import Response, request  # noqa: E402
 
-from audio_io import load_wav_bytes_at  # noqa: E402
+from audio_io import load_wav_bytes_at, trim_leading_silence  # noqa: E402
 
 log = logging.getLogger(NAME)
 
@@ -71,7 +71,9 @@ def clone():
     if reference is None:
         return json_error("reference_audio file is required", 400)
 
-    waveform = load_wav_bytes_at(reference.read(), REFERENCE_RATE)
+    # Chatterbox only uses the first 10 s of the reference (6 s for the
+    # speech-token prompt): start them where the volunteer starts speaking.
+    waveform = trim_leading_silence(load_wav_bytes_at(reference.read(), REFERENCE_RATE), REFERENCE_RATE)
     if waveform.numel() < REFERENCE_RATE:
         return json_error("reference audio is shorter than 1 second", 400)
 

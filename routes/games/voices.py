@@ -1,4 +1,4 @@
-"""Game 2 - "Di chi è la voce?" (voice cloning guessing game).
+"""Game 2 - "Voice Match" (voice cloning guessing game).
 
 All teams play at the same time:
   1. Setup: each team sends one or more volunteers; each records ~12 s

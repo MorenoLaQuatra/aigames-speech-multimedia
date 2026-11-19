@@ -1,4 +1,4 @@
-"""Image generation worker for the "drawing" game (Visual Taboo AI).
+"""Image generation worker for the "drawing" game (Visual Taboo).
 
 Models, all loaded at start-up on models.workers.image_gen.device:
   1. text-to-image: games.drawing.image_model selects one entry of
