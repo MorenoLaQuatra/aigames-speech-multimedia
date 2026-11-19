@@ -59,10 +59,15 @@ GPU is unavailable); nothing else changes.
 ```bash
 conda activate ai-games          # cloned from the `chatterbox` env + web/model deps (requirements.txt)
 cp .env.example .env             # set SECRET_KEY: python -c "import secrets; print(secrets.token_hex(32))"
-flask --app "app:build" create-admin      # first admin; further accounts from the admin panel
+flask --app "app:build" create-admin      # first admin
 flask --app "app:build" seed-content      # default sounds / phrases / scenes (skips games that have content)
 ./start.sh
 ```
+
+More accounts: `./add-user.sh <username>` (instructor) or
+`./add-user.sh <username> admin`; it asks the password (min. 8 characters) and
+works with the platform running or stopped. Existing accounts (password reset,
+role, disable) are managed from **Amministrazione**.
 
 Development server (accepts dotted overrides, e.g. `--server.port 8030`):
 `python app.py`.
@@ -89,6 +94,9 @@ Model weights download from Hugging Face on first use into
 - **Archivia**: ends the match (read-only afterwards). Voice recordings,
   cloned clips and generated images of that match are deleted
   (`privacy.delete_media_on_archive`); names and scores remain.
+- **Elimina definitivamente** (admins only; trash icon in the matches list or
+  the button at the bottom of a match): removes a match, active or archived,
+  with its teams, scores, recordings and images. Cannot be undone.
 - **Amministrazione** (admins only): accounts (create, disable, reset
   password, role), game content, model processes.
 
@@ -112,17 +120,21 @@ https (Cloudflare tunnel) or `http://localhost`.
 ## Code map
 
 ```
-app.py                     app factory, CLI (create-admin, seed-content)
+app.py                     app factory, CLI (create-user, create-admin, seed-content)
+add-user.sh                add an account (wraps `flask create-user`)
+deploy/conda-env.sh        conda activation shared by start.sh / add-user.sh
 models.py                  users, matches/teams/score events, game content and state
 services/model_manager.py  start/stop/health of model worker processes
 services/scoring.py        leaderboards (per game + final)
 services/context.py        current match (session), admin_required
 services/media.py          per-match media folder (deleted on archive)
+services/matches.py        permanent deletion of a match (rows + media)
 routes/                    auth, home, matches, admin, models_api, games/<slug>.py
 workers/                   one HTTP worker per model family (+ common.py, audio_io.py)
 content/                   default game content (seed-content)
 i18n/                      core.py + one module per game; it/en key parity checked at import
 static/js/gamekit.js       shared game-page components (model badge, timer, team picker, mini board)
+static/img/games/          game artwork (school-flyer pictures as WebP: <slug>.webp cards, <slug>-thumb.webp titles)
 ```
 
 ## Adding or changing game content

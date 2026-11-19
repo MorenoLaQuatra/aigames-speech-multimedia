@@ -1,0 +1,5 @@
+{# Admins: permanently delete `match` (button with confirmation). #}
+<form method="post" action="{{ url_for('matches.delete', match_id=match.id) }}" class="inline-form js-confirm" data-confirm="{{ t('matches.confirm_delete', name=match.name) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" class="btn btn--danger-ghost"><i class="fa-solid fa-trash"></i>{{ t('matches.delete') }}</button>
+</form>

@@ -1,5 +1,5 @@
 """Matches: create, pick the current one, manage teams, correct scores,
-finish/reopen single games, archive, and show results (normal page,
+finish/reopen single games, archive, delete (admins), and show results (normal page,
 full-screen projector view, full-screen results of one game)."""
 
 from datetime import date, datetime, timezone
@@ -15,6 +15,7 @@ from i18n import t
 from models import MATCH_ACTIVE, MATCH_ARCHIVED, TEAM_COLORS, Match, ScoreEvent, Team
 from routes.games import GAMES, GAMES_BY_SLUG
 from services.context import clear_current_match, get_current_match, set_current_match
+from services.matches import delete_match
 from services.media import delete_match_media
 from services.scoring import GAME_SLUGS, add_score, finish_game, reopen_game, standings, standings_json
 
@@ -203,22 +204,10 @@ def reopen(match_id):
 @matches_bp.route("/<int:match_id>/delete", methods=["POST"])
 @login_required
 def delete(match_id):
+    """Admins: permanently delete a match (active or archived) with all its data."""
     if not current_user.is_admin:
         abort(403)
-    from models import DrawingAttempt, VoiceClip, VoiceGuess, VoiceVolunteer
-
-    match = _get_match(match_id)
-    delete_match_media(match.id)
-    clip_ids = [c.id for c in VoiceClip.query.filter_by(match_id=match.id)]
-    if clip_ids:
-        VoiceGuess.query.filter(VoiceGuess.clip_id.in_(clip_ids)).delete(synchronize_session=False)
-    VoiceClip.query.filter_by(match_id=match.id).delete()
-    VoiceVolunteer.query.filter_by(match_id=match.id).delete()
-    DrawingAttempt.query.filter_by(match_id=match.id).delete()
-    ScoreEvent.query.filter_by(match_id=match.id).delete()
-    name = match.name
-    db.session.delete(match)
-    db.session.commit()
+    name = delete_match(_get_match(match_id))
     flash(t("matches.deleted", name=name), "success")
     return redirect(url_for("matches.index"))
 
@@ -366,7 +355,8 @@ def display(match_id):
     page_config = {
         "url": url_for("matches.api_standings", match_id=match.id),
         "refreshMs": 5000,
-        "games": [{"slug": g["slug"], "icon": g["icon"], "title": t(f"games.{g['slug']}.title")} for g in GAMES],
+        "games": [{"slug": g["slug"], "thumb": url_for("static", filename=g["thumb"]),
+                   "title": t(f"games.{g['slug']}.title")} for g in GAMES],
         "strings": {"points": t("results.points_short"), "notPlayed": t("results.not_played")},
     }
     return render_template("matches/display.html", match=match, page_config=page_config)

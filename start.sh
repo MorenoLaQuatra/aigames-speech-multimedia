@@ -7,13 +7,8 @@
 set -euo pipefail
 cd "$(dirname "$(readlink -f "$0")")"
 
-CONDA_SH="/home/mlaquatra/miniconda3/etc/profile.d/conda.sh"
-if [ ! -f "$CONDA_SH" ]; then
-    CONDA_SH="/mnt/disk1/mlaquatra/miniconda3/etc/profile.d/conda.sh"
-fi
-# shellcheck disable=SC1090
-source "$CONDA_SH"
-conda activate ai-games
+# shellcheck source=deploy/conda-env.sh
+source deploy/conda-env.sh
 
 eval "$(python - <<'PY'
 from yaml_config_manager import load_config

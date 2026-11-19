@@ -1,0 +1,5 @@
+{# Admins: trash icon in the matches lists that permanently deletes `m`. #}
+<form method="post" action="{{ url_for('matches.delete', match_id=m.id) }}" class="inline-form js-confirm" data-confirm="{{ t('matches.confirm_delete', name=m.name) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" class="icon-btn" title="{{ t('matches.delete') }}" aria-label="{{ t('matches.delete') }}"><i class="fa-solid fa-trash"></i></button>
+</form>

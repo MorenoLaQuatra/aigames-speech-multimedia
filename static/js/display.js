@@ -41,7 +41,10 @@
     gameList.replaceChildren(...cfg.games.map((game) => {
       const box = el("div", "display-game");
       const head = el("h3");
-      head.append(el("i", `fa-solid ${game.icon}`), document.createTextNode(game.title));
+      const thumb = el("img", "game-thumb game-thumb--sm");
+      thumb.src = game.thumb;
+      thumb.alt = "";
+      head.append(thumb, document.createTextNode(game.title));
       box.append(head);
       if (!data.played.includes(game.slug)) {
         box.append(el("div", "display-game__row", cfg.strings.notPlayed));

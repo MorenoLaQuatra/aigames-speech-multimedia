@@ -122,10 +122,13 @@
   {% if not match.is_archived %}
   <h2>{{ t('matches.end_title') }}</h2>
   <p class="muted">{{ t('matches.end_body') }}</p>
-  <form method="post" action="{{ url_for('matches.archive', match_id=match.id) }}" class="js-confirm" data-confirm="{{ t('matches.confirm_archive') }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit" class="btn btn--danger"><i class="fa-solid fa-box-archive"></i>{{ t('matches.archive_button') }}</button>
-  </form>
+  <div class="row">
+    <form method="post" action="{{ url_for('matches.archive', match_id=match.id) }}" class="inline-form js-confirm" data-confirm="{{ t('matches.confirm_archive') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn--danger"><i class="fa-solid fa-box-archive"></i>{{ t('matches.archive_button') }}</button>
+    </form>
+    {% if current_user.is_admin %}{% include "partials/match_delete.html" %}{% endif %}
+  </div>
   {% elif current_user.is_admin %}
   <h2>{{ t('matches.admin_actions') }}</h2>
   <div class="row">
@@ -133,10 +136,7 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn btn--ghost">{{ t('matches.reopen') }}</button>
     </form>
-    <form method="post" action="{{ url_for('matches.delete', match_id=match.id) }}" class="inline-form js-confirm" data-confirm="{{ t('matches.confirm_delete') }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" class="btn btn--danger-ghost">{{ t('matches.delete') }}</button>
-    </form>
+    {% include "partials/match_delete.html" %}
   </div>
   {% endif %}
 </section>

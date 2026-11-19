@@ -6,7 +6,7 @@
 <div class="grid grid--2">
   {% for game in games %}
   <a class="game-card" href="{{ url_for(game.slug ~ '.content') }}">
-    <div class="game-card__icon"><i class="fa-solid {{ game.icon }}"></i></div>
+    <img class="game-card__art" src="{{ url_for('static', filename=game.image) }}" alt="" loading="lazy">
     <h2>{{ t('games.' ~ game.slug ~ '.title') }}</h2>
     <p>{{ t('games.' ~ game.slug ~ '.content_summary') }}</p>
     <div class="game-card__foot"><span></span><span class="btn btn--sm btn--ghost">{{ t('admin.edit_content') }}<i class="fa-solid fa-arrow-right"></i></span></div>

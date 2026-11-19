@@ -26,12 +26,12 @@
     <div class="grid grid--2">
       {% for game in games %}
       <a class="game-card" href="{{ url_for(game.slug ~ '.play') }}">
+        <img class="game-card__art" src="{{ url_for('static', filename=game.image) }}" alt="" loading="lazy">
         <div class="row row--between">
-          <div class="game-card__icon"><i class="fa-solid {{ game.icon }}"></i></div>
+          <span class="game-card__number">{{ t('home.game_n', n=loop.index) }}</span>
           {% if game.slug in current_finished_games %}<span class="badge badge--success"><i class="fa-solid fa-flag-checkered"></i>{{ t('home.finished') }}</span>
           {% elif game.slug in standings.played %}<span class="badge badge--success"><i class="fa-solid fa-check"></i>{{ t('home.played') }}</span>{% endif %}
         </div>
-        <span class="game-card__number">{{ t('home.game_n', n=loop.index) }}</span>
         <h2>{{ t('games.' ~ game.slug ~ '.title') }}</h2>
         <p>{{ t('games.' ~ game.slug ~ '.short') }}</p>
         <div class="game-card__foot">
@@ -99,7 +99,7 @@
 <div class="grid grid--4">
   {% for game in games %}
   <div class="game-card">
-    <div class="game-card__icon"><i class="fa-solid {{ game.icon }}"></i></div>
+    <img class="game-card__art" src="{{ url_for('static', filename=game.image) }}" alt="" loading="lazy">
     <span class="game-card__number">{{ t('home.game_n', n=loop.index) }}</span>
     <h3 style="margin:0">{{ t('games.' ~ game.slug ~ '.title') }}</h3>
     <p>{{ t('games.' ~ game.slug ~ '.short') }}</p>

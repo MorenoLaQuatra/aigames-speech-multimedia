@@ -64,7 +64,7 @@
     {% for game in games %}
     <div class="card">
       <div class="card__head">
-        <h3><i class="fa-solid {{ game.icon }}" style="color: var(--accent)"></i> {{ t('games.' ~ game.slug ~ '.title') }}</h3>
+        <h3 class="game-title"><img class="game-thumb game-thumb--sm" src="{{ url_for('static', filename=game.thumb) }}" alt="">{{ t('games.' ~ game.slug ~ '.title') }}</h3>
         {% if game.slug not in standings.played %}<span class="badge">{{ t('results.not_played') }}</span>{% endif %}
       </div>
       <table class="table table--compact">

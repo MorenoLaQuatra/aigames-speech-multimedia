@@ -6,6 +6,7 @@ development). Model processes are started and stopped by the webapp itself
 
     python app.py                                    # dev server (accepts --dotted.config overrides)
     ./start.sh                                       # production (gunicorn), see README.md
+    ./add-user.sh <username> [instructor|admin]      # add an account (asks the password)
     flask --app "app:build" create-admin             # bootstrap the first admin
     flask --app "app:build" seed-content             # load the default game content
 
@@ -31,7 +32,7 @@ from yaml_config_manager import load_config  # noqa: E402
 from extensions import csrf, db, login_manager  # noqa: E402
 from i18n import get_locale, localized, t  # noqa: E402
 from services.scoring import GameFinishedError, clean_points, finished_games  # noqa: E402
-from models import ROLE_ADMIN, User  # noqa: E402
+from models import ROLE_ADMIN, ROLE_INSTRUCTOR, ROLES, User  # noqa: E402
 from routes.games import GAMES  # noqa: E402
 from services.context import get_current_match  # noqa: E402
 from services.model_manager import ModelManager  # noqa: E402
@@ -193,13 +194,39 @@ def _register_error_handlers(app):
                                body=t("errors.500_body")), 500
 
 
+def _check_password(password):
+    from routes.auth import MIN_PASSWORD_LENGTH
+
+    if len(password) < MIN_PASSWORD_LENGTH:
+        raise click.UsageError(f"Password too short (at least {MIN_PASSWORD_LENGTH} characters).")
+
+
 def _register_cli_commands(app):
+    @app.cli.command("create-user")
+    @click.option("--username", prompt=True)
+    @click.option("--role", type=click.Choice(ROLES), default=ROLE_INSTRUCTOR, show_default=True)
+    @click.option("--password", prompt=True, hide_input=True, confirmation_prompt=True)
+    def create_user(username, role, password):
+        """Add an account (used by ./add-user.sh). Fails if the username exists:
+        passwords and roles of existing accounts are changed from the admin panel."""
+        username = username.strip()
+        if not username:
+            raise click.UsageError("Empty username.")
+        if User.find_by_username(username) is not None:
+            raise click.UsageError(f"User {username!r} already exists (manage it from Amministrazione).")
+        _check_password(password)
+        user = User(username=username, role=role, enabled=True)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        click.echo(f"User {user.username!r} ({role}) created.")
+
     @app.cli.command("create-admin")
     @click.option("--username", prompt=True)
     @click.option("--password", prompt=True, hide_input=True, confirmation_prompt=True)
     def create_admin(username, password):
-        """Create the first admin (or reset an existing account to admin + new password).
-        Further accounts are managed from the admin panel."""
+        """Create the first admin (or reset an existing account to admin + new password)."""
+        _check_password(password)
         user = User.find_by_username(username)
         if user is None:
             user = User(username=username.strip(), role=ROLE_ADMIN)

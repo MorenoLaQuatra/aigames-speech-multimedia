@@ -140,7 +140,7 @@ STRINGS = {
         "matches.reopen": "Riapri partita",
         "matches.reopened": "Partita \"{name}\" riaperta.",
         "matches.delete": "Elimina definitivamente",
-        "matches.confirm_delete": "Eliminare definitivamente la partita con tutte le squadre e i punteggi?",
+        "matches.confirm_delete": "Eliminare definitivamente la partita \"{name}\" con squadre, punteggi, registrazioni e immagini? Non si può annullare.",
         "matches.deleted": "Partita \"{name}\" eliminata.",
 
         "results.title": "Risultati",
@@ -388,7 +388,7 @@ STRINGS = {
         "matches.reopen": "Reopen match",
         "matches.reopened": "Match \"{name}\" reopened.",
         "matches.delete": "Delete permanently",
-        "matches.confirm_delete": "Permanently delete this match with all its teams and scores?",
+        "matches.confirm_delete": "Permanently delete the match \"{name}\" with its teams, scores, recordings and images? This cannot be undone.",
         "matches.deleted": "Match \"{name}\" deleted.",
 
         "results.title": "Results",

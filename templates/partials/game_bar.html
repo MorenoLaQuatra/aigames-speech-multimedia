@@ -3,7 +3,7 @@
    worker may be none (model runs in the browser). #}
 <div class="game-bar">
   <div class="game-bar__title">
-    <i class="fa-solid {{ games | selectattr('slug', 'equalto', slug) | map(attribute='icon') | first }}"></i>
+    <img class="game-thumb" src="{{ url_for('static', filename=games | selectattr('slug', 'equalto', slug) | map(attribute='thumb') | first) }}" alt="">
     <div>
       <div class="breadcrumb"><a href="{{ url_for('home.index') }}">{{ t('nav.dashboard') }}</a> / {{ match.name }}</div>
       <h1>{{ t('games.' ~ slug ~ '.title') }}</h1>

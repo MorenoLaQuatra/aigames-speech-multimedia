@@ -32,6 +32,7 @@
               </form>
               {% endif %}
               <a class="btn btn--ghost btn--sm" href="{{ url_for('matches.detail', match_id=m.id) }}">{{ t('matches.manage') }}</a>
+              {% if current_user.is_admin %}{% include "partials/match_delete_icon.html" %}{% endif %}
             </td>
           </tr>
           {% endfor %}
@@ -62,7 +63,8 @@
             <td>{{ m.school }}</td>
             <td class="nowrap">{{ m.play_date.strftime('%d/%m/%Y') }}</td>
             <td>{{ m.teams | length }} {{ t('matches.teams_lower') }}</td>
-            <td class="text-right nowrap"><a class="btn btn--ghost btn--sm" href="{{ url_for('matches.results', match_id=m.id) }}">{{ t('matches.results') }}</a></td>
+            <td class="text-right nowrap"><a class="btn btn--ghost btn--sm" href="{{ url_for('matches.results', match_id=m.id) }}">{{ t('matches.results') }}</a>
+              {% if current_user.is_admin %}{% include "partials/match_delete_icon.html" %}{% endif %}</td>
           </tr>
           {% endfor %}
           </tbody>

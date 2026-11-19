@@ -12,7 +12,7 @@
 <header class="display__head">
   <img src="{{ url_for('static', filename='img/uke-logo-full-dark.svg') }}" alt="UKE">
   <div>
-    <h1 class="display__title"><i class="fa-solid {{ game.icon }} display__game-icon"></i>{{ t('games.' ~ game.slug ~ '.title') }}</h1>
+    <h1 class="display__title game-title"><img class="game-thumb game-thumb--lg" src="{{ url_for('static', filename=game.thumb) }}" alt="">{{ t('games.' ~ game.slug ~ '.title') }}</h1>
     <div class="display__subtitle">{{ t('display.game_results') }} · {{ match.name }}</div>
   </div>
 </header>

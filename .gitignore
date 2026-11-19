@@ -11,7 +11,8 @@ logs/
 *.log
 *.pid
 
-# Internal development notes (not for the repository)
+# Internal development notes and original artwork (web copies in static/img/games/)
+icons-games/
 recap.md
 CLAUDE.md
 .claude/
